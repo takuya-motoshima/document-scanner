@@ -142,40 +142,6 @@ def resizeImg(img, width=None, height=None, interpolation = cv2.INTER_AREA):
     resizedImg = cv2.resize(img, (height, width), interpolation)
     return resizedImg
 
-def imgToDataURL(path):
-  """Image to data URI. This method supports images with png, jpg and jpeg extensions.
-  Args:
-    path: Image path.
-  Returns:
-    Returns the data URL.
-  Raises:
-    ValueError: Image types other than png, jpg, jpeg.
-  """
-  # Find the image extension.
-  name = os.path.basename(path).split('.')
-  ext = name[1].lower() if len(name) > 1 else None
-  print(f'ext={ext}')
-
-  # base64 media type.
-  mediaType = None
-  if ext == 'jpg' or ext == 'jpeg':
-    mediaType = 'jpeg'
-  elif ext=='png':
-    mediaType = 'png'
-  else:
-    # Returns an error for images other than png and jpg.
-    raise ValueError('Invalid image type')
-
-  # Image bytes object.
-  with open(path, 'rb') as f:
-    bytes = f.read()
-  
-  # Bytes object to base64.
-  b64 = base64.b64encode(bytes).decode('utf-8')
-
-  # Convert base64 to DataURL and return.
-  return 'data:image/' + mediaType + ';base64,' + b64
-
 # load an image
 if len(sys.argv) < 2:
   raise Exception('Image path is required')
