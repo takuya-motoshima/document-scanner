@@ -3,8 +3,32 @@ import numpy as np
 import utils
 import sys
 
-# define variable for resize ratio
-resizeRatio = 1
+def main():
+  # load an image
+  if len(sys.argv) < 2:
+    raise Exception('Image path is required')
+  img = cv2.imread(sys.argv[1])
+
+  # Resize the image.
+  resizedImg, resizeRatio = resizeImg(img, height=600)
+  print(f'resizeRatio={resizeRatio}')
+  utils.show('Original image', resizedImg)
+
+  # Make a copy.
+  copyResizedImg = resizedImg.copy()
+
+  # Find the largest document contour.
+  maxCnt = findContourV2(resizedImg)
+  # maxCnt = findContourV1(resizedImg)
+
+  # Draw a contour.
+  cv2.drawContours(copyResizedImg, [maxCnt], -1, (0,255,0), 3)
+  utils.show('Marked', copyResizedImg)
+
+  # Apply the four point tranform to obtain a "birds eye view" of the image.
+  warpImg = fourPointTransform(maxCnt/resizeRatio, img)
+  warpImg, _ = resizeImg(warpImg, height=800)
+  utils.show('Warped', warpImg)
 
 def findContourV2(img):
   """Find the contour of the rectangle with the largest area.
@@ -124,45 +148,23 @@ def resizeImg(img, width=None, height=None, interpolation = cv2.INTER_AREA):
   Returns:
     Returns a resized ndarray image.
   """
-  global resizeRatio
+  resizeRatio = 1
   orgiWidth, orgiHeight, _ = img.shape
   print(f'orgiWidth={orgiWidth}, orgiHeight={orgiHeight}')
   if width is None and height is None:
-    return img
+    return img, resizeRatio
   elif width is None:
     resizeRatio = height/orgiHeight
     width = int(orgiWidth * resizeRatio)
     print(f'width={width}, height={height}')
     resizedImg = cv2.resize(img, (height, width), interpolation)
-    return resizedImg
+    return resizedImg, resizeRatio
   else:
     resizeRatio = width/orgiWidth
     height = int(orgiHeight * resizeRatio)
     print(f'width={width}, height={height}')
     resizedImg = cv2.resize(img, (height, width), interpolation)
-    return resizedImg
+    return resizedImg, resizeRatio
 
-# load an image
-if len(sys.argv) < 2:
-  raise Exception('Image path is required')
-img = cv2.imread(sys.argv[1])
-
-# Resize the image.
-resizedImg = resizeImg(img, height=600)
-utils.show('Original image', resizedImg)
-
-# Make a copy.
-copyResizedImg = resizedImg.copy()
-
-# Find the largest document contour.
-maxCnt = findContourV2(resizedImg)
-# maxCnt = findContourV1(resizedImg)
-
-# Draw a contour.
-cv2.drawContours(copyResizedImg, [maxCnt], -1, (0,255,0), 3)
-utils.show('Marked', copyResizedImg)
-
-# Apply the four point tranform to obtain a "birds eye view" of the image.
-warpImg = fourPointTransform(maxCnt/resizeRatio, img)
-warpImg = resizeImg(warpImg, height=800)
-utils.show('Warped', warpImg)
+if __name__ == "__main__":
+  main()
