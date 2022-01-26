@@ -1,8 +1,13 @@
 import cv2
 import tkinter as tk
 
-def show(name, img):
-# def show(name, img, scaleWidth = 500):
+def show(title, img):
+# def show(title, img, scaleWidth = 500):
+  """Show image on display.
+  Args:
+    title: Display title
+    img: ndarray type image.
+  """
   height, width = img.shape[:2]
   root = tk.Tk()
   screenWidth = root.winfo_screenwidth()
@@ -20,8 +25,8 @@ def show(name, img):
   # dst = cv2.resize(img, dsize=(scaleWidth, scaleHeight))
   x = round(screenWidth / 2 - (width * multiplier) / 2)
   y = round(screenHeight / 2 - (height * multiplier) / 2)
-  cv2.namedWindow(name) 
-  cv2.moveWindow(name, x, y)
-  cv2.imshow(name, dst)
+  cv2.namedWindow(title) 
+  cv2.moveWindow(title, x, y)
+  cv2.imshow(title, dst)
   cv2.waitKey(0)
   cv2.destroyAllWindows()
