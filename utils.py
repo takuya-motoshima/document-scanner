@@ -1,8 +1,10 @@
 import cv2
-import tkinter as tk
 import base64
 import os.path
 import re
+from importlib import import_module
+# tkinter changed to read dynamically in show function.
+# import tkinter as tk
 
 def imgToDataURL(path):
   """Image to data URI. This method supports images with png, jpg and jpeg extensions.
@@ -64,6 +66,7 @@ def show(title, img):
     img: ndarray type image.
   """
   height, width = img.shape[:2]
+  tk = import_module('tkinter')
   root = tk.Tk()
   screenWidth = root.winfo_screenwidth()
   screenHeight = root.winfo_screenheight()
