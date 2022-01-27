@@ -4,8 +4,13 @@ import utils
 import argparse
 import os
 import re
+import logging
 
 def main():
+  # Logging Into A File.
+  logging.basicConfig(filename='scan.log', level=logging.DEBUG, format="%(asctime)s -> %(levelname)s: %(message)s")
+  logging.debug('begin')
+
   # Parse arguments.
   opts = parseArguments()
   print(f'opts={opts}')
