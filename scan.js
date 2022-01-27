@@ -7,6 +7,7 @@ program
   .description('Scan document from image')
   .requiredOption('-i, --image <string>', 'Image path or Data URL', utils.validateImg)
   .option('-r, --aspect-ratio <string>', 'Resize the scanned document to the specified aspect ratio. Typing as a width:height ratio (like 4:5 or 1.618:1).', utils.validateAspectRatio)
+  .option('-o, --output <string>', 'Output image path of the found document')
   .parse();
 const opts = program.opts();
 // console.log('opts=', opts);
@@ -15,6 +16,8 @@ const opts = program.opts();
 const args = ['-i', opts.image];
 if (opts.aspectRatio)
   args.push('-r', opts.aspectRatio);
+if (opts.output)
+  args.push('-o', opts.output);
 // console.log('args=', args);
 
 // Scan document.

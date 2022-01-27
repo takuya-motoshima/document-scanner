@@ -4,8 +4,13 @@ import utils
 import argparse
 import os
 import re
+import logging
 
 def main():
+  # Logging Into A File.
+  logging.basicConfig(filename='scan.log', level=logging.DEBUG, format="%(asctime)s -> %(levelname)s: %(message)s")
+  logging.debug('begin')
+
   # Parse arguments.
   opts = parseArguments()
   print(f'opts={opts}')
@@ -49,6 +54,11 @@ def main():
     warpImg = cv2.resize(warpImg, (resizeWd, resizeHt), cv2.INTER_AREA)
     utils.show(f'Resize to {wdRatio}:{htRatio} ratio', warpImg)
 
+  # Write the image to a file if you have the output option.
+  if opts.output:
+    cv2.imwrite(opts.output, warpImg)
+    print(f'Output {opts.output}')
+
 def parseArguments():
   """Parses and returns command arguments.
   Returns:
@@ -58,6 +68,7 @@ def parseArguments():
   parser = argparse.ArgumentParser()
   parser.add_argument('-i', '--image', required=True, help='increase output verbosity')
   parser.add_argument('-r', '--aspect-ratio', dest='aspectRatio', help='Resize the scanned document to the specified aspect ratio. Typing as a width:height ratio (like 4:5 or 1.618:1).')
+  parser.add_argument('-o', '--output', help='Output image path of the found document')
   opts = parser.parse_args()
 
   # Image option validation.

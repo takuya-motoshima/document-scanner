@@ -1,5 +1,6 @@
 import unittest
 import utils
+import numpy as np
 
 class TestUtils(unittest.TestCase):
 	def test_right_for_detect_data_url(self):
@@ -38,6 +39,17 @@ class TestUtils(unittest.TestCase):
 			with self.subTest(case):
 				res = utils.detectDataURL(case)
 				self.assertIsNone(res)
+
+	def test_right_for_to_data_url(self):
+		cases = [
+			['img/license.png', None],
+			[np.zeros((100, 100, 3)), 'png'] # 100x100 image
+		]
+		for case in cases:
+			with self.subTest(case):
+				img, mediaType = case
+				res = utils.toDataURL(img, mediaType)
+				self.assertRegex(res,  r'^data:..*$')
 
 if __name__ == '__main__':
   unittest.main()
