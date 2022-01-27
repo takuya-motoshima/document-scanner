@@ -50,12 +50,12 @@ def detectDataURL(str):
   Returns:
     If the string is a DataURL, it returns the media type and base64. Otherwise returns None.
   """
-  m = re.match(r'^\s*data:(?:(\w+\/[\w\d\-+.]+)(?:;[\w-]+=[\w\d-]+)?)?(?:;base64)?,([\w\d!$&\',()*+;=\-._~:@\/?%\s]*)\s*$', str)
-  # m = re.match(r'^\s*data:(\w+\/\w+(?:;[\w\-]+\=[\w\-]+)?)?(?:;base64)?,([\w\d!$&\',()*+,;=\-._~:@\/?%\s]*)\s*$', str)
-  if not m:
+  found = re.match(r'^\s*data:(?:(\w+\/[\w\d\-+.]+)(?:;[\w-]+=[\w\d-]+)?)?(?:;base64)?,([\w\d!$&\',()*+;=\-._~:@\/?%\s]*)\s*$', str)
+  # found = re.match(r'^\s*data:(\w+\/\w+(?:;[\w\-]+\=[\w\-]+)?)?(?:;base64)?,([\w\d!$&\',()*+,;=\-._~:@\/?%\s]*)\s*$', str)
+  if not found:
     return None
-  mediaType = m.group(1)
-  b64 = m.group(2)
+  mediaType = found.group(1)
+  b64 = found.group(2)
   return mediaType, b64
 
 def show(title, img):

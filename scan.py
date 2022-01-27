@@ -1,17 +1,21 @@
 import cv2
 import numpy as np
 import utils
-import sys
+import argparse
+import os
+import re
 
 def main():
-  # load an image
-  if len(sys.argv) < 2:
-    raise Exception('Image path is required')
-  img = cv2.imread(sys.argv[1])
+  # Parse arguments.
+  opts = parseArguments()
+  print(f'opts={opts}')
+
+  # load an image.
+  img = cv2.imread(opts.image)
 
   # Resize the image.
   resizedImg, resizeRatio = resizeImg(img, height=600)
-  print(f'resizeRatio={resizeRatio}')
+  # print(f'resizeRatio={resizeRatio}')
   utils.show('Original image', resizedImg)
 
   # Make a copy.
@@ -29,6 +33,40 @@ def main():
   warpImg = fourPointTransform(maxCnt/resizeRatio, img)
   warpImg, _ = resizeImg(warpImg, height=800)
   utils.show('Warped', warpImg)
+
+def parseArguments():
+  """Parses and returns command arguments.
+  Returns:
+    Returns the parsed result in the format (image = <string>, aspectRatio = <string>).
+  """
+  # Parse.
+  parser = argparse.ArgumentParser()
+  parser.add_argument('-i', '--image', required=True, help='increase output verbosity')
+  parser.add_argument('-r', '--aspect-ratio', dest='aspectRatio', help='Resize the scanned document to the specified aspect ratio. Typing as a width:height ratio (like 4:5 or 1.618:1).')
+  opts = parser.parse_args()
+
+  # Image option validation.
+  res = utils.detectDataURL(opts.image)
+  if res:
+    mediaType = res[0]
+    if mediaType != 'image/png' and mediaType != 'image/jpeg':
+      raise ValueError('Unsupported media type, Images can process PNG or JPG')
+  else:
+    if not os.path.exists(opts.image):
+      raise ValueError('File path not found')
+    elif not os.path.isfile(opts.image):
+      raise ValueError('It\'s not a file path')
+
+  # Aspect ratio option validation.
+  if opts.aspectRatio is not None:
+    found = re.match(r'^((?!0\d)\d*(?:\.\d+)?):((?!0\d)\d*(?:\.\d+)?)$', opts.aspectRatio)
+    if not found:
+      raise ValueError('Invalid format, typing as a width:height ratio (like 4:5 or 1.618:1)')
+    w = found.group(1)
+    h = found.group(2)
+    if float(w) == 0 or float(h) == 0:
+      raise ValueError('Zero cannot be used for height or width ratio')
+  return opts
 
 def findContourV2(img):
   """Find the contour of the rectangle with the largest area.
@@ -101,7 +139,7 @@ def convertContourToRect(cnt):
   rect[3] = pts[np.argmax(diff)] # bottom-left
 
   # Returns the rectangle coordinates of the contour.
-  print(f'rect={rect}')
+  # print(f'rect={rect}')
   return rect
 
 def fourPointTransform(cnt, origImg):
@@ -150,19 +188,19 @@ def resizeImg(img, width=None, height=None, interpolation = cv2.INTER_AREA):
   """
   resizeRatio = 1
   orgiWidth, orgiHeight, _ = img.shape
-  print(f'orgiWidth={orgiWidth}, orgiHeight={orgiHeight}')
+  # print(f'orgiWidth={orgiWidth}, orgiHeight={orgiHeight}')
   if width is None and height is None:
     return img, resizeRatio
   elif width is None:
     resizeRatio = height/orgiHeight
     width = int(orgiWidth * resizeRatio)
-    print(f'width={width}, height={height}')
+    # print(f'width={width}, height={height}')
     resizedImg = cv2.resize(img, (height, width), interpolation)
     return resizedImg, resizeRatio
   else:
     resizeRatio = width/orgiWidth
     height = int(orgiHeight * resizeRatio)
-    print(f'width={width}, height={height}')
+    # print(f'width={width}, height={height}')
     resizedImg = cv2.resize(img, (height, width), interpolation)
     return resizedImg, resizeRatio
 
