@@ -6,6 +6,7 @@ Detect documents from images.
 ```sh
 pip3 install opencv-python
 pip3 install opencv-contrib-python
+pip3 install matplotlib
 ```
 
 ## How to use the document scan command
