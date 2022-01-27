@@ -14,7 +14,7 @@ def main():
   img = cv2.imread(opts.image)
 
   # Resize the image.
-  resizedImg, resizeRatio = resizeImg(img, height=600)
+  resizedImg, resizeRatio = resizeImg(img, ht=600)
   # print(f'resizeRatio={resizeRatio}')
   utils.show('Original image', resizedImg)
 
@@ -31,8 +31,23 @@ def main():
 
   # Apply the four point tranform to obtain a "birds eye view" of the image.
   warpImg = fourPointTransform(maxCnt/resizeRatio, img)
-  warpImg, _ = resizeImg(warpImg, height=800)
+  warpImg, _ = resizeImg(warpImg, ht=800)
   utils.show('Warped', warpImg)
+
+  # Resizes the document image with the specified aspect ratio.
+  if opts.aspectRatio:
+    wd, ht, _ = warpImg.shape
+    wdRatio, htRatio = list(map(float, opts.aspectRatio.split(':')))
+    resizeWd = wd
+    resizeHt = ht
+    # Resize so that the width and height after resizing are not smaller than before resizing.
+    if (ht / wd) < (htRatio / wdRatio):
+      resizeHt = round(wd * (htRatio / wdRatio))
+    else:
+      resizeWd = round(ht / (htRatio / wdRatio))
+    print(f'resize={resizeWd}/{resizeHt}')
+    warpImg = cv2.resize(warpImg, (resizeWd, resizeHt), cv2.INTER_AREA)
+    utils.show(f'Resize to {wdRatio}:{htRatio} ratio', warpImg)
 
 def parseArguments():
   """Parses and returns command arguments.
@@ -62,9 +77,9 @@ def parseArguments():
     found = re.match(r'^((?!0\d)\d*(?:\.\d+)?):((?!0\d)\d*(?:\.\d+)?)$', opts.aspectRatio)
     if not found:
       raise ValueError('Invalid format, typing as a width:height ratio (like 4:5 or 1.618:1)')
-    w = found.group(1)
-    h = found.group(2)
-    if float(w) == 0 or float(h) == 0:
+    wdRatio = found.group(1)
+    htRatio = found.group(2)
+    if float(wdRatio) == 0 or float(htRatio) == 0:
       raise ValueError('Zero cannot be used for height or width ratio')
   return opts
 
@@ -155,28 +170,28 @@ def fourPointTransform(cnt, origImg):
 
   # Compute the width of the new image, which will be the maximum distance between bottom-right and bottom-left x-coordiates or the top-right and top-left x-coordinates
   (tl, tr, br, bl) = rect
-  widthA = np.sqrt(((br[0] - bl[0]) ** 2) + ((br[1] - bl[1]) ** 2))
-  widthB = np.sqrt(((tr[0] - tl[0]) ** 2) + ((tr[1] - tl[1]) ** 2))
-  maxWidth = max(int(widthA), int(widthB))
+  wdA = np.sqrt(((br[0] - bl[0]) ** 2) + ((br[1] - bl[1]) ** 2))
+  wdB = np.sqrt(((tr[0] - tl[0]) ** 2) + ((tr[1] - tl[1]) ** 2))
+  maxWd = max(int(wdA), int(wdB))
 
   # Compute the height of the new image, which will be the maximum distance between the top-right and bottom-right y-coordinates or the top-left and bottom-left y-coordinates
-  heightA = np.sqrt(((tr[0] - br[0]) ** 2) + ((tr[1] - br[1]) ** 2))
-  heightB = np.sqrt(((tl[0] - bl[0]) ** 2) + ((tl[1] - bl[1]) ** 2))
-  maxHeight = max(int(heightA), int(heightB))
+  htA = np.sqrt(((tr[0] - br[0]) ** 2) + ((tr[1] - br[1]) ** 2))
+  htB = np.sqrt(((tl[0] - bl[0]) ** 2) + ((tl[1] - bl[1]) ** 2))
+  maxHt = max(int(htA), int(htB))
 
   # Now that we have the dimensions of the new image, construct the set of destination points to obtain a "birds eye view", (i.e. top-down view) of the image, again specifying points in the top-left, top-right, bottom-right, and bottom-left order.
-  dst = np.array([[0, 0], [maxWidth - 1, 0], [maxWidth - 1, maxHeight - 1], [0, maxHeight - 1]], dtype = 'float32')
+  dst = np.array([[0, 0], [maxWd - 1, 0], [maxWd - 1, maxHt - 1], [0, maxHt - 1]], dtype = 'float32')
 
   # Compute the perspective transform matrix and then apply it.
   M = cv2.getPerspectiveTransform(rect, dst)
-  return cv2.warpPerspective(origImg, M, (maxWidth, maxHeight))
+  return cv2.warpPerspective(origImg, M, (maxWd, maxHt))
 
-def resizeImg(img, width=None, height=None, interpolation = cv2.INTER_AREA):
+def resizeImg(img, wd=None, ht=None, interpolation = cv2.INTER_AREA):
   """Resize the image.
   Args:
     img: ndarray type image.
-    width: Width after resizing.
-    height: Height after resizing.
+    wd: Width after resizing.
+    ht: Height after resizing.
     interpolation: Interpolation flag that takes one of the following methods.
                     cv2.INTER_NEAREST: nearest neighbor interpolation.
                     cv2.INTER_LINEAR: bilinear interpolation.
@@ -187,21 +202,21 @@ def resizeImg(img, width=None, height=None, interpolation = cv2.INTER_AREA):
     Returns a resized ndarray image.
   """
   resizeRatio = 1
-  orgiWidth, orgiHeight, _ = img.shape
-  # print(f'orgiWidth={orgiWidth}, orgiHeight={orgiHeight}')
-  if width is None and height is None:
+  origWd, origHt, _ = img.shape
+  # print(f'origWd={origWd}, origHt={origHt}')
+  if wd is None and ht is None:
     return img, resizeRatio
-  elif width is None:
-    resizeRatio = height/orgiHeight
-    width = int(orgiWidth * resizeRatio)
-    # print(f'width={width}, height={height}')
-    resizedImg = cv2.resize(img, (height, width), interpolation)
+  elif wd is None:
+    resizeRatio = ht / origHt
+    wd = int(origWd * resizeRatio)
+    # print(f'wd={wd}, ht={ht}')
+    resizedImg = cv2.resize(img, (ht, wd), interpolation)
     return resizedImg, resizeRatio
   else:
-    resizeRatio = width/orgiWidth
-    height = int(orgiHeight * resizeRatio)
-    # print(f'width={width}, height={height}')
-    resizedImg = cv2.resize(img, (height, width), interpolation)
+    resizeRatio = wd / origWd
+    ht = int(origHt * resizeRatio)
+    # print(f'wd={wd}, ht={ht}')
+    resizedImg = cv2.resize(img, (ht, wd), interpolation)
     return resizedImg, resizeRatio
 
 if __name__ == "__main__":

@@ -34,8 +34,8 @@ exports.validateAspectRatio = (val) => {
   const found = val.match(/^((?!0\d)\d*(?:\.\d+)?):((?!0\d)\d*(?:\.\d+)?)$/);
   if (!found)
     throw new commander.InvalidArgumentError('Invalid format, typing as a width:height ratio (like 4:5 or 1.618:1)');
-  const [_, w, h] = found;
-  if (parseFloat(w) === 0 || parseFloat(h) === 0)
+  const [_, wdRatio, htRatio] = found;
+  if (parseFloat(wdRatio) === 0 || parseFloat(htRatio) === 0)
     throw new commander.InvalidArgumentError('Zero cannot be used for height or width ratio');
   return val;
 }

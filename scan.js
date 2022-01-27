@@ -17,7 +17,7 @@ if (opts.aspectRatio)
   args.push('-r', opts.aspectRatio);
 // console.log('args=', args);
 
-// Scan document..
+// Scan document.
 PythonShell.run('scan.py', {args}, (err, res) => {
   if (err)
     return void console.error(err.message);
