@@ -1,4 +1,5 @@
 import cv2
+import numpy as np
 import base64
 import os.path
 import re
@@ -6,39 +7,56 @@ from importlib import import_module
 # tkinter changed to read dynamically in show function.
 # import tkinter as tk
 
-def imgToDataURL(path):
+def toDataURL(img, mediaType = None):
   """Image to data URI. This method supports images with png, jpg and jpeg extensions.
   Args:
-    path: Image path.
+    img: Image path or CV2 ndarray image.
+    mediaType: The media type of the data URL. Required if the image is an ndarray image.
   Returns:
     Returns the data URL.
   Raises:
     ValueError: Image types other than png, jpg, jpeg.
   """
-  # Find the image extension.
-  name = os.path.basename(path).split('.')
-  ext = name[1].lower() if len(name) > 1 else None
-  print(f'ext={ext}')
+  if isinstance(img, np.ndarray):
+    # Check parameters.
+    if not mediaType:
+      raise ValueError('Requires media type (png or jpeg)')
+    elif mediaType != 'png' and mediaType != 'jpeg':
+      raise ValueError('Media types can be png and jpg')
 
-  # base64 media type.
-  mediaType = None
-  if ext == 'jpg' or ext == 'jpeg':
-    mediaType = 'jpeg'
-  elif ext=='png':
-    mediaType = 'png'
+    # ndarray image to base64.
+    _, encoded = cv2.imencode(f'.{mediaType}', img)
+    b64 = base64.b64encode(encoded).decode('ascii')
+
+    # Returns base64 as a Data URL.
+    return f'data:image/{mediaType};base64,{b64}'
+  elif isinstance(img, str):
+    # Find the image extension.
+    name = os.path.basename(img).split('.')
+    ext = name[1].lower() if len(name) > 1 else None
+    # print(f'ext={ext}')
+
+    # base64 media type.
+    mediaType = None
+    if ext == 'jpg' or ext == 'jpeg':
+      mediaType = 'jpeg'
+    elif ext=='png':
+      mediaType = 'png'
+    else:
+      # Returns an error for images other than png and jpg.
+      raise ValueError('Invalid image type')
+
+    # Image bytes object.
+    with open(img, 'rb') as f:
+      bytes = f.read()
+    
+    # Bytes object to base64.
+    b64 = base64.b64encode(bytes).decode('utf-8')
+
+    # Convert base64 to DataURL and return.
+    return f'data:image/{mediaType};base64,{b64}'
   else:
-    # Returns an error for images other than png and jpg.
-    raise ValueError('Invalid image type')
-
-  # Image bytes object.
-  with open(path, 'rb') as f:
-    bytes = f.read()
-  
-  # Bytes object to base64.
-  b64 = base64.b64encode(bytes).decode('utf-8')
-
-  # Convert base64 to DataURL and return.
-  return 'data:image/' + mediaType + ';base64,' + b64
+    raise ValueError('Image parameters should be file paths or ndarray images')
 
 def detectDataURL(str):
   """Detecting data URLs.
