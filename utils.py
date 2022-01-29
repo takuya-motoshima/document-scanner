@@ -34,7 +34,6 @@ def toDataURL(img, mediaType = None):
     # Find the image extension.
     name = os.path.basename(img).split('.')
     ext = name[1].lower() if len(name) > 1 else None
-    # print(f'ext={ext}')
 
     # base64 media type.
     mediaType = None

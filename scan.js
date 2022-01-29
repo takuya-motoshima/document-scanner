@@ -5,20 +5,18 @@ const utils = require('./utils');
 // Parse arguments.
 program
   .description('Scan document from image')
-  .requiredOption('-i, --image <string>', 'Image path or Data URL', utils.validateImg)
-  .option('-r, --aspect-ratio <string>', 'Resize the scanned document to the specified aspect ratio. Typing as a width:height ratio (like 4:5 or 1.618:1).', utils.validateAspectRatio)
+  .requiredOption('-i, --input <string>', 'Image path or Data URL', utils.validateImg)
   .option('-o, --output <string>', 'Output image path of the found document')
+  .option('-r, --aspect <string>', 'Resize the scanned document to the specified aspect ratio. Typing as a width:height ratio (like 4:5 or 1.618:1).', utils.validateAspectRatio)
   .parse();
 const opts = program.opts();
-// console.log('opts=', opts);
 
 // Generate command arguments.
-const args = ['-i', opts.image];
-if (opts.aspectRatio)
-  args.push('-r', opts.aspectRatio);
+const args = ['-i', opts.input];
 if (opts.output)
   args.push('-o', opts.output);
-// console.log('args=', args);
+if (opts.aspectRatio)
+  args.push('-r', opts.aspectRatio);
 
 // Scan document.
 PythonShell.run('scan.py', {args}, (err, res) => {

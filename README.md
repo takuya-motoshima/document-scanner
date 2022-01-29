@@ -20,9 +20,9 @@ python scan.py --help
 # 
 # options:
 #   -h, --help            show this help message and exit
-#   -i IMAGE, --image IMAGE
+#   -i IMAGE, --input IMAGE
 #                         increase output verbosity
-#   -r ASPECTRATIO, --aspect-ratio ASPECTRATIO
+#   -r ASPECTRATIO, --aspect ASPECTRATIO
 #                         Resize the scanned document to the specified aspect
 #                         ratio. Typing as a width:height ratio (like 4:5 or
 #                         1.618:1).
@@ -36,6 +36,11 @@ python scan.py -i img/license.png
 Resize document to size Japanese driver's license.
 ```sh
 python scan.py -i img/license.png -r 8.56:5.4
+```
+
+Find a document from an image Data URL.
+```sh
+python scan.py -r 8.56:5.4 -i "data:image/png;base64,iVB..."
 ```
 
 ## Unit test
