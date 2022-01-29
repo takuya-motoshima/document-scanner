@@ -13,22 +13,26 @@ def main():
 
   # Parse arguments.
   opts = parseArguments()
-  print(f'opts={opts}')
+  logging.debug(f'opts={opts}')
 
   # load an image.
-  img = cv2.imread(opts.image)
+  img = cv2.imread(opts.input)
 
   # Resize the image.
   resizedImg, resizeRatio = resizeImg(img, ht=600)
-  # print(f'resizeRatio={resizeRatio}')
+  # logging.debug(f'resizeRatio={resizeRatio}')
   utils.show('Original image', resizedImg)
 
   # Make a copy.
   copyResizedImg = resizedImg.copy()
 
-  # Find the largest document contour.
-  maxCnt = findContourV2(resizedImg)
-  # maxCnt = findContourV1(resizedImg)
+  # Find the contour of the rectangle with the largest area.
+  maxCnt = findRectangleContour(resizedImg)
+
+  # Rectangle contour not found.
+  if maxCnt is None:
+    logging.debug('Rectangle contour not found')
+    return None
 
   # Draw a contour.
   cv2.drawContours(copyResizedImg, [maxCnt], -1, (0,255,0), 3)
@@ -50,14 +54,14 @@ def main():
       resizeHt = round(wd * (htRatio / wdRatio))
     else:
       resizeWd = round(ht / (htRatio / wdRatio))
-    print(f'resize={resizeWd}/{resizeHt}')
+    logging.debug(f'resize={resizeWd}/{resizeHt}')
     warpImg = cv2.resize(warpImg, (resizeWd, resizeHt), cv2.INTER_AREA)
     utils.show(f'Resize to {wdRatio}:{htRatio} ratio', warpImg)
 
   # Write the image to a file if you have the output option.
   if opts.output:
     cv2.imwrite(opts.output, warpImg)
-    print(f'Output {opts.output}')
+    logging.debug(f'Output {opts.output}')
 
 def parseArguments():
   """Parses and returns command arguments.
@@ -66,21 +70,24 @@ def parseArguments():
   """
   # Parse.
   parser = argparse.ArgumentParser()
-  parser.add_argument('-i', '--image', required=True, help='increase output verbosity')
-  parser.add_argument('-r', '--aspect-ratio', dest='aspectRatio', help='Resize the scanned document to the specified aspect ratio. Typing as a width:height ratio (like 4:5 or 1.618:1).')
-  parser.add_argument('-o', '--output', help='Output image path of the found document')
+  parser.add_argument('-i', '--input', type=str, required=True, help='Image path or Data URL')
+  parser.add_argument('-o', '--output', type=str, help='Output image path of the found document')
+  parser.add_argument('-r', '--aspect', dest='aspectRatio', type=str, help='Resize the scanned document to the specified aspect ratio. Typing as a width:height ratio (like 4:5 or 1.618:1).')
+  parser.add_argument('-p', '--print-data-url', type=str, help='Print the data URL of the document')
   opts = parser.parse_args()
 
   # Image option validation.
-  res = utils.detectDataURL(opts.image)
+  res = utils.detectDataURL(opts.input)
   if res:
+    # For data URL.
     mediaType = res[0]
     if mediaType != 'image/png' and mediaType != 'image/jpeg':
       raise ValueError('Unsupported media type, Images can process PNG or JPG')
   else:
-    if not os.path.exists(opts.image):
+    # If it is not a data URL, treat it as an image path.
+    if not os.path.exists(opts.input):
       raise ValueError('File path not found')
-    elif not os.path.isfile(opts.image):
+    elif not os.path.isfile(opts.input):
       raise ValueError('It\'s not a file path')
 
   # Aspect ratio option validation.
@@ -94,7 +101,7 @@ def parseArguments():
       raise ValueError('Zero cannot be used for height or width ratio')
   return opts
 
-def findContourV2(img):
+def findRectangleContour(img):
   """Find the contour of the rectangle with the largest area.
   Args:
     img: ndarray type image.
@@ -114,34 +121,34 @@ def findContourV2(img):
   # edgedImg = cv2.Canny(grayImg, 100, 200, apertureSize=3)
   utils.show('Edged', edgedImg)
 
-  # Find the contour of the maximum area.
+  # # Blur the image to remove noise.
+  # blurImg = cv2.GaussianBlur(grayImg, (5, 5), 0)
+  # utils.show('Blurred', blurImg)
+
+  # # Convert to a white and black image (binarized image).
+  # _, threshImg = cv2.threshold(grayImg, 128, 255, cv2.THRESH_BINARY)
+  # utils.show('Binarized', threshImg)
+
+  # Find the contour.
   cnts, _ = cv2.findContours(edgedImg, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
-  cnt = max(cnts, key = cv2.contourArea)
-  return cv2.approxPolyDP(cnt, 0.02 * cv2.arcLength(cnt, True), True)
+  logging.debug(f'length of countours {len(cnts)}')
 
-def findContourV1(img):
-  """Find the contour of the rectangle with the largest area.
-  Args:
-    img: ndarray type image.
-  Returns:
-    Returns a list (ndarray) of the points (x, y) found on the contour.
-  """
-  # Grayscale.
-  grayImg = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-  utils.show('Grayscale', grayImg)
+  # If you can't find the contour.
+  if not cnts:
+    return None
 
-  # Blur the image to remove noise.
-  blurImg = cv2.GaussianBlur(grayImg, (5, 5), 0)
-  utils.show('Blurred', blurImg)
+  # Find the rectangular contour with the largest area from the found contours.
+  cnts = sorted(cnts, key=cv2.contourArea, reverse=True)
+  for cnt in cnts:
+    approx = cv2.approxPolyDP(cnt, 0.02 * cv2.arcLength(cnt, True), True)
+    # if our approximated contour has four points, we can assume it is rectangle.
+    if len(approx) == 4:
+      return approx
 
-  # Convert to a white and black image (binarized image).
-  _, threshImg = cv2.threshold(grayImg, 128, 255, cv2.THRESH_BINARY)
-  utils.show('Binarized', threshImg)
-
-  # Find the contour of the maximum area.
-  cnts, _ = cv2.findContours(threshImg, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
-  cnt = max(cnts, key = cv2.contourArea)
-  return cv2.approxPolyDP(cnt, 0.02 * cv2.arcLength(cnt, True), True)
+  # If you can't find the rectangle contour.
+  return None
+  # cnt = max(cnts, key = cv2.contourArea)
+  # return cv2.approxPolyDP(cnt, 0.02 * cv2.arcLength(cnt, True), True)
 
 def convertContourToRect(cnt):
   """Convert contour points (x, y) to four external rectangle points (x, y).
@@ -165,7 +172,7 @@ def convertContourToRect(cnt):
   rect[3] = pts[np.argmax(diff)] # bottom-left
 
   # Returns the rectangle coordinates of the contour.
-  # print(f'rect={rect}')
+  # logging.debug(f'rect={rect}')
   return rect
 
 def fourPointTransform(cnt, origImg):
@@ -214,19 +221,19 @@ def resizeImg(img, wd=None, ht=None, interpolation = cv2.INTER_AREA):
   """
   resizeRatio = 1
   origWd, origHt, _ = img.shape
-  # print(f'origWd={origWd}, origHt={origHt}')
+  # logging.debug(f'origWd={origWd}, origHt={origHt}')
   if wd is None and ht is None:
     return img, resizeRatio
   elif wd is None:
     resizeRatio = ht / origHt
     wd = int(origWd * resizeRatio)
-    # print(f'wd={wd}, ht={ht}')
+    # logging.debug(f'wd={wd}, ht={ht}')
     resizedImg = cv2.resize(img, (ht, wd), interpolation)
     return resizedImg, resizeRatio
   else:
     resizeRatio = wd / origWd
     ht = int(origHt * resizeRatio)
-    # print(f'wd={wd}, ht={ht}')
+    # logging.debug(f'wd={wd}, ht={ht}')
     resizedImg = cv2.resize(img, (ht, wd), interpolation)
     return resizedImg, resizeRatio
 
