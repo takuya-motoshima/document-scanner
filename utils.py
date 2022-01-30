@@ -32,8 +32,7 @@ def toDataURL(img, mediaType = None):
     return f'data:image/{mediaType};base64,{b64}'
   elif isinstance(img, str):
     # Find the image extension.
-    name = os.path.basename(img).split('.')
-    ext = name[1].lower() if len(name) > 1 else None
+    ext = getFileExtension(img)
 
     # base64 media type.
     mediaType = None
@@ -75,11 +74,24 @@ def detectDataURL(str):
   b64 = found.group(2)
   return mediaType, b64
 
+def getFileExtension(path):
+  """Returns the file extension.
+  Args:
+    path: File Path.
+  Returns:
+    File extension, e.g. png.
+  """
+  # Find the image extension.
+  name = os.path.basename(path).split('.')
+  if len(name) < 2:
+    return None
+  return name[1].lower()
+
 def show(title, img):
 # def show(title, img, scaleWd = 500):
   """Show image on display.
   Args:
-    title: Display title
+    title: Display title.
     img: ndarray type image.
   """
   ht, wd = img.shape[:2]

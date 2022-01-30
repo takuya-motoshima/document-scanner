@@ -12,7 +12,7 @@ program
 const opts = program.opts();
 
 // Generate command arguments.
-const args = ['-i', opts.input];
+const args = ['-i', opts.input, '-p'];
 if (opts.output)
   args.push('-o', opts.output);
 if (opts.aspectRatio)
@@ -22,5 +22,8 @@ if (opts.aspectRatio)
 PythonShell.run('scan.py', {args}, (err, res) => {
   if (err)
     return void console.error(err.message);
-  console.log(res);
+  if (!res)
+    return void console.warn('Document not found in image');
+  const dataURL = res[0];
+  console.log(`dataURL=${dataURL.slice(0, 100)}`);
 });

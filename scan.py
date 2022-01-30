@@ -63,6 +63,17 @@ def main():
     cv2.imwrite(opts.output, warpImg)
     logging.debug(f'Output {opts.output}')
 
+  # Print the image data URL if you have a print option.
+  if opts.printDataUrl:
+    mediaType = None
+    if isinstance(opts.input, str):
+      ext = utils.getFileExtension(opts.input)
+      if ext == 'jpg' or ext == 'jpeg':
+        mediaType = 'jpeg'
+      elif ext=='png':
+        mediaType = 'png'
+    print(utils.toDataURL(warpImg, mediaType))
+
 def parseArguments():
   """Parses and returns command arguments.
   Returns:
@@ -73,7 +84,7 @@ def parseArguments():
   parser.add_argument('-i', '--input', type=str, required=True, help='Image path or Data URL')
   parser.add_argument('-o', '--output', type=str, help='Output image path of the found document')
   parser.add_argument('-r', '--aspect', dest='aspectRatio', type=str, help='Resize the scanned document to the specified aspect ratio. Typing as a width:height ratio (like 4:5 or 1.618:1).')
-  parser.add_argument('-p', '--print-data-url', type=str, help='Print the data URL of the document')
+  parser.add_argument('-p', '--print-data-url', dest='printDataUrl', action='store_true', help='Print the data URL of the document')
   opts = parser.parse_args()
 
   # Image option validation.
