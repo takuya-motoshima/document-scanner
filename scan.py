@@ -63,6 +63,17 @@ def main():
     cv2.imwrite(opts.output, warpImg)
     logging.debug(f'Output {opts.output}')
 
+  # Print the image data URL if you have a print option.
+  if opts.printDataUrl:
+    mime = None
+    if isinstance(opts.input, str):
+      ext = utils.getExtension(opts.input)
+      if ext == 'jpg' or ext == 'jpeg':
+        mime = 'jpeg'
+      elif ext=='png':
+        mime = 'png'
+    print(utils.toDataURL(warpImg, mime))
+
 def parseArguments():
   """Parses and returns command arguments.
   Returns:
@@ -73,15 +84,15 @@ def parseArguments():
   parser.add_argument('-i', '--input', type=str, required=True, help='Image path or Data URL')
   parser.add_argument('-o', '--output', type=str, help='Output image path of the found document')
   parser.add_argument('-r', '--aspect', dest='aspectRatio', type=str, help='Resize the scanned document to the specified aspect ratio. Typing as a width:height ratio (like 4:5 or 1.618:1).')
-  parser.add_argument('-p', '--print-data-url', type=str, help='Print the data URL of the document')
+  parser.add_argument('-p', '--print-data-url', dest='printDataUrl', action='store_true', help='Print the data URL of the document')
   opts = parser.parse_args()
 
   # Image option validation.
   res = utils.detectDataURL(opts.input)
   if res:
     # For data URL.
-    mediaType = res[0]
-    if mediaType != 'image/png' and mediaType != 'image/jpeg':
+    mime = res[0]
+    if mime != 'image/png' and mime != 'image/jpeg':
       raise ValueError('Unsupported media type, Images can process PNG or JPG')
   else:
     # If it is not a data URL, treat it as an image path.

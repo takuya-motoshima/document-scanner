@@ -7,11 +7,11 @@ from importlib import import_module
 # tkinter changed to read dynamically in show function.
 # import tkinter as tk
 
-def toDataURL(img, mediaType = None):
+def toDataURL(img, mime = None):
   """Image to data URI. This method supports images with png, jpg and jpeg extensions.
   Args:
     img: Image path or CV2 ndarray image.
-    mediaType: The media type of the data URL. Required if the image is an ndarray image.
+    mime: The media type of the data URL. Required if the image is an ndarray image.
   Returns:
     Returns the data URL.
   Raises:
@@ -19,28 +19,27 @@ def toDataURL(img, mediaType = None):
   """
   if isinstance(img, np.ndarray):
     # Check parameters.
-    if not mediaType:
+    if not mime:
       raise ValueError('Requires media type (png or jpeg)')
-    elif mediaType != 'png' and mediaType != 'jpeg':
+    elif mime != 'png' and mime != 'jpeg':
       raise ValueError('Media types can be png and jpg')
 
     # ndarray image to base64.
-    _, encoded = cv2.imencode(f'.{mediaType}', img)
+    _, encoded = cv2.imencode(f'.{mime}', img)
     b64 = base64.b64encode(encoded).decode('ascii')
 
     # Returns base64 as a Data URL.
-    return f'data:image/{mediaType};base64,{b64}'
+    return f'data:image/{mime};base64,{b64}'
   elif isinstance(img, str):
     # Find the image extension.
-    name = os.path.basename(img).split('.')
-    ext = name[1].lower() if len(name) > 1 else None
+    ext = getExtension(img)
 
     # base64 media type.
-    mediaType = None
+    mime = None
     if ext == 'jpg' or ext == 'jpeg':
-      mediaType = 'jpeg'
+      mime = 'jpeg'
     elif ext=='png':
-      mediaType = 'png'
+      mime = 'png'
     else:
       # Returns an error for images other than png and jpg.
       raise ValueError('Invalid image type')
@@ -53,7 +52,7 @@ def toDataURL(img, mediaType = None):
     b64 = base64.b64encode(bytes).decode('utf-8')
 
     # Convert base64 to DataURL and return.
-    return f'data:image/{mediaType};base64,{b64}'
+    return f'data:image/{mime};base64,{b64}'
   else:
     raise ValueError('Image parameters should be file paths or ndarray images')
 
@@ -71,15 +70,28 @@ def detectDataURL(str):
   # found = re.match(r'^\s*data:(\w+\/\w+(?:;[\w\-]+\=[\w\-]+)?)?(?:;base64)?,([\w\d!$&\',()*+,;=\-._~:@\/?%\s]*)\s*$', str)
   if not found:
     return None
-  mediaType = found.group(1)
+  mime = found.group(1)
   b64 = found.group(2)
-  return mediaType, b64
+  return mime, b64
+
+def getExtension(path):
+  """Returns the file extension.
+  Args:
+    path: File Path.
+  Returns:
+    File extension, e.g. png.
+  """
+  # Find the image extension.
+  name = os.path.basename(path).split('.')
+  if len(name) < 2:
+    return None
+  return name[1].lower()
 
 def show(title, img):
 # def show(title, img, scaleWd = 500):
   """Show image on display.
   Args:
-    title: Display title
+    title: Display title.
     img: ndarray type image.
   """
   ht, wd = img.shape[:2]

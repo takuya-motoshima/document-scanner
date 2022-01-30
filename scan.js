@@ -1,6 +1,7 @@
 const {PythonShell} = require('python-shell');
 const {program} = require('commander');
 const utils = require('./utils');
+const fs = require('fs');
 
 // Parse arguments.
 program
@@ -12,7 +13,7 @@ program
 const opts = program.opts();
 
 // Generate command arguments.
-const args = ['-i', opts.input];
+const args = ['-i', opts.input, '-p'];
 if (opts.output)
   args.push('-o', opts.output);
 if (opts.aspectRatio)
@@ -20,7 +21,25 @@ if (opts.aspectRatio)
 
 // Scan document.
 PythonShell.run('scan.py', {args}, (err, res) => {
+  // Exception occurred in python.
   if (err)
     return void console.error(err.message);
-  console.log(res);
+
+  // If no document is found.
+  if (!res)
+    return void console.warn('Document not found in image');
+
+  // Document data URL scanned from image.
+  const dataURL = res[0];
+
+  // Write document image to file.
+  const b64 = dataURL.replace(/^data:image\/[A-Za-z]+;base64,/, '');
+  console.log(`b64=${b64.slice(0, 100)}`);
+  fs.writeFileSync('output/result.png', b64);
+
+  // test
+  {
+    const tmp = fs.readFileSync('output/result2.png', {encoding: 'base64'});
+    console.log(`tmp=${tmp.slice(0, 100)}`);
+  }
 });
