@@ -11,8 +11,8 @@ const fs = require('fs');
 exports.validateImg = (val) => {
   const found = val.match(/^\s*data:(?:(\w+\/[\w\d\-+.]+)(?:;[\w-]+=[\w\d-]+)?)?(?:;base64)?,([\w\d!$&\',()*+;=\-._~:@\/?%\s]*)\s*$/);
   if (found) {
-    const mediaType = found[1];
-    if (mediaType !== 'image/png' && mediaType !== 'image/jpeg')
+    const mime = found[1];
+    if (mime !== 'image/png' && mime !== 'image/jpeg')
       throw new commander.InvalidArgumentError('Unsupported media type, Images can process PNG or JPG');
   } else {
     if (!fs.existsSync(val))

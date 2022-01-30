@@ -65,14 +65,14 @@ def main():
 
   # Print the image data URL if you have a print option.
   if opts.printDataUrl:
-    mediaType = None
+    mime = None
     if isinstance(opts.input, str):
-      ext = utils.getFileExtension(opts.input)
+      ext = utils.getExtension(opts.input)
       if ext == 'jpg' or ext == 'jpeg':
-        mediaType = 'jpeg'
+        mime = 'jpeg'
       elif ext=='png':
-        mediaType = 'png'
-    print(utils.toDataURL(warpImg, mediaType))
+        mime = 'png'
+    print(utils.toDataURL(warpImg, mime))
 
 def parseArguments():
   """Parses and returns command arguments.
@@ -91,8 +91,8 @@ def parseArguments():
   res = utils.detectDataURL(opts.input)
   if res:
     # For data URL.
-    mediaType = res[0]
-    if mediaType != 'image/png' and mediaType != 'image/jpeg':
+    mime = res[0]
+    if mime != 'image/png' and mime != 'image/jpeg':
       raise ValueError('Unsupported media type, Images can process PNG or JPG')
   else:
     # If it is not a data URL, treat it as an image path.

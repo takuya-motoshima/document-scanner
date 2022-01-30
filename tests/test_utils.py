@@ -47,8 +47,8 @@ class TestUtils(unittest.TestCase):
 		]
 		for case in cases:
 			with self.subTest(case):
-				img, mediaType = case
-				res = utils.toDataURL(img, mediaType)
+				img, mime = case
+				res = utils.toDataURL(img, mime)
 				self.assertRegex(res,  r'^data:..*$')
 
 if __name__ == '__main__':
