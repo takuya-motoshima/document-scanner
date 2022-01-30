@@ -42,8 +42,11 @@ class TestUtils(unittest.TestCase):
 
 	def test_right_for_to_data_url(self):
 		cases = [
+			# Correct image path.
 			['img/license.png', None],
-			[np.zeros((100, 100, 3)), 'png'] # 100x100 image
+
+			# Image of correct ndarray type.
+			[np.zeros((100, 100, 3)), 'png']
 		]
 		for case in cases:
 			with self.subTest(case):

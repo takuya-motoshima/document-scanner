@@ -44,23 +44,15 @@ python scan.py -r 8.56:5.4 -i "data:image/png;base64,iVB..."
 ```
 
 ## Unit test
-Run all test cases in the tests directory.
 ```sh
 python -m unittest discover -v tests
 # test_right_for_detect_data_url (test_utils.TestUtils) ... ok
+# test_right_for_to_data_url (test_utils.TestUtils) ... ok
 # test_wrong_for_detect_data_url (test_utils.TestUtils) ... ok
+# 
 # ----------------------------------------------------------------------
-# Ran 2 tests in 0.001s
-# OK
-```
-
-Run only one test case.
-```sh
-python -m unittest -v tests.test_utils
-# test_right_for_detect_data_url (tests.test_utils.TestUtils) ... ok
-# test_wrong_for_detect_data_url (tests.test_utils.TestUtils) ... ok
-# ----------------------------------------------------------------------
-# Ran 2 tests in 0.001s
+# Ran 3 tests in 0.004s
+# 
 # OK
 ```
 

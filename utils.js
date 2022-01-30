@@ -5,7 +5,7 @@ const fs = require('fs');
  * Image option validation.
  *
  * @param   {string} Argument value.
- * @returns Returns the original value if there are no errors.
+ * @returns Return the original value if there are no errors.
  * @throws  {commander.InvalidArgumentError} Invalid value.
  */
 exports.validateImg = (val) => {
@@ -27,7 +27,7 @@ exports.validateImg = (val) => {
  * Aspect ratio option validation.
  *
  * @param   {string} Argument value.
- * @returns Returns the original value if there are no errors.
+ * @returns Return the original value if there are no errors.
  * @throws  {commander.InvalidArgumentError} Invalid value.
  */
 exports.validateAspectRatio = (val) => {

@@ -2,6 +2,7 @@ const {PythonShell} = require('python-shell');
 const {program} = require('commander');
 const utils = require('./utils');
 const fs = require('fs');
+const moment = require('moment');
 
 // Parse arguments.
 program
@@ -29,17 +30,12 @@ PythonShell.run('scan.py', {args}, (err, res) => {
   if (!res)
     return void console.warn('Document not found in image');
 
-  // Document data URL scanned from image.
-  const dataURL = res[0];
+  // Base64 of scanned document image.
+  const b64 = res.toString();
+  console.log(`b64=${b64.slice(0, 100)}`);
 
   // Write document image to file.
-  const b64 = dataURL.replace(/^data:image\/[A-Za-z]+;base64,/, '');
-  console.log(`b64=${b64.slice(0, 100)}`);
-  fs.writeFileSync('output/result.png', b64);
-
-  // test
-  {
-    const tmp = fs.readFileSync('output/result2.png', {encoding: 'base64'});
-    console.log(`tmp=${tmp.slice(0, 100)}`);
-  }
+  const outputFile = `output/${moment().format('YYYYMMDDHHmmss')}.png`;
+  fs.writeFileSync(outputFile, Buffer.from(b64, 'base64'));
+  console.log(`Wtite ${outputFile}`);
 });

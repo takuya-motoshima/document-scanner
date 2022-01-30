@@ -4,6 +4,7 @@ import utils
 import argparse
 import os
 import re
+import base64
 import logging
 
 def main():
@@ -63,39 +64,33 @@ def main():
     cv2.imwrite(opts.output, warpImg)
     logging.debug(f'Output {opts.output}')
 
-  # Print the image data URL if you have a print option.
-  if opts.printDataUrl:
-    mime = None
-    if isinstance(opts.input, str):
-      ext = utils.getExtension(opts.input)
-      if ext == 'jpg' or ext == 'jpeg':
-        mime = 'jpeg'
-      elif ext=='png':
-        mime = 'png'
-    print(utils.toDataURL(warpImg, mime))
+  # Print the image Data URL if you have a print option.
+  if opts.printBase64:
+    b64, _ = utils.toBase64(warpImg, utils.getMime(opts.input))
+    print(b64)
 
 def parseArguments():
   """Parses and returns command arguments.
   Returns:
-    Returns the parsed result in the format (image = <string>, aspectRatio = <string>).
+    Return the parsed result in the format (image = <string>, aspectRatio = <string>).
   """
   # Parse.
   parser = argparse.ArgumentParser()
   parser.add_argument('-i', '--input', type=str, required=True, help='Image path or Data URL')
   parser.add_argument('-o', '--output', type=str, help='Output image path of the found document')
   parser.add_argument('-r', '--aspect', dest='aspectRatio', type=str, help='Resize the scanned document to the specified aspect ratio. Typing as a width:height ratio (like 4:5 or 1.618:1).')
-  parser.add_argument('-p', '--print-data-url', dest='printDataUrl', action='store_true', help='Print the data URL of the document')
+  parser.add_argument('-p', '--print-base64', dest='printBase64', action='store_true', help='Print the base64 of the document')
   opts = parser.parse_args()
 
   # Image option validation.
   res = utils.detectDataURL(opts.input)
   if res:
-    # For data URL.
+    # For Data URL.
     mime = res[0]
     if mime != 'image/png' and mime != 'image/jpeg':
       raise ValueError('Unsupported media type, Images can process PNG or JPG')
   else:
-    # If it is not a data URL, treat it as an image path.
+    # If it is not a Data URL, treat it as an image path.
     if not os.path.exists(opts.input):
       raise ValueError('File path not found')
     elif not os.path.isfile(opts.input):
@@ -117,7 +112,7 @@ def findRectangleContour(img):
   Args:
     img: ndarray type image.
   Returns:
-    Returns a list (ndarray) of the points (x, y) found on the contour.
+    Return a list (ndarray) of the points (x, y) found on the contour.
   """
   # Grayscale.
   grayImg = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
@@ -166,7 +161,7 @@ def convertContourToRect(cnt):
   Args:
     cnt: Contour points (x, y).
   Returns:
-    Returns a rectangular list of points (4 rows 2 columns).
+    Return a rectangular list of points (4 rows 2 columns).
   """
   # Initialzie a list of coordinates that will be ordered such that the first entry in the list is the top-left, the second entry is the top-right, the third is the bottom-right, and the fourth is the bottom-left.
   pts = cnt.reshape(4, 2)
@@ -182,17 +177,17 @@ def convertContourToRect(cnt):
   rect[1] = pts[np.argmin(diff)] # top-right
   rect[3] = pts[np.argmax(diff)] # bottom-left
 
-  # Returns the rectangle coordinates of the contour.
+  # Return the rectangle coordinates of the contour.
   # logging.debug(f'rect={rect}')
   return rect
 
 def fourPointTransform(cnt, origImg):
-  """Returns a Keystone correction image (ndarray) of a rectangle on the image.
+  """Return a Keystone correction image (ndarray) of a rectangle on the image.
   Args:
     cnt: Contour points (x, y).
     origImg: Original image of ndarray type.
   Returns:
-    Returns a Keystone correction image (ndarray).
+    Return a Keystone correction image (ndarray).
   """
   # Contour quadrilateral coordinates.
   rect = convertContourToRect(cnt)
@@ -228,7 +223,7 @@ def resizeImg(img, wd=None, ht=None, interpolation = cv2.INTER_AREA):
                     cv2.INTER_AREA: resampling using pixel area relation. It may be a preferred method for image decimation, as it gives moire'-free results. But when the image is zoomed, it is similar to the INTER_NEAREST method.
                     cv2.INTER_LANCZOS4: Lanczos interpolation over 8x8 neighborhood.
   Returns:
-    Returns a resized ndarray image.
+    Return a resized ndarray image.
   """
   resizeRatio = 1
   origWd, origHt, _ = img.shape
