@@ -8,56 +8,59 @@ from importlib import import_module
 # import tkinter as tk
 
 def toDataURL(img, mime = None):
-  """Image to data URI. This method supports images with png, jpg and jpeg extensions.
+  """Image to Data URL. Supports png, jpg and jpeg.
   Args:
     img: Image path or CV2 ndarray image.
-    mime: The media type of the data URL. Required if the image is an ndarray image.
+    mime: The media type of the Data URL. Required if the image is an ndarray image.
   Returns:
-    Returns the data URL.
+    Return Data URL and MIME type.
+  Raises:
+    ValueError: Image types other than png, jpg, jpeg.
+  """
+  # to base64.
+  b64, mime = toBase64(img, mime)
+
+  # Generates and returns a Data URL string based on base64.
+  return f'data:image/{mime};base64,{b64}', mime
+
+def toBase64(img, mime = None):
+  """Image to base64. Supports png, jpg and jpeg.
+  Args:
+    img: Image path or CV2 ndarray image.
+    mime: The media type of the Data URL. Required if the image is an ndarray image.
+  Returns:
+    Return base64 and MIME type.
   Raises:
     ValueError: Image types other than png, jpg, jpeg.
   """
   if isinstance(img, np.ndarray):
-    # Check parameters.
+    # For ndarray images.
+    # Return an error if the required parameter MIME type is missing.
     if not mime:
       raise ValueError('Requires media type (png or jpeg)')
-    elif mime != 'png' and mime != 'jpeg':
-      raise ValueError('Media types can be png and jpg')
 
     # ndarray image to base64.
     _, encoded = cv2.imencode(f'.{mime}', img)
-    b64 = base64.b64encode(encoded).decode('ascii')
 
-    # Returns base64 as a Data URL.
-    return f'data:image/{mime};base64,{b64}'
+    # Return base64.
+    return base64.b64encode(encoded).decode('ascii'), mime
   elif isinstance(img, str):
-    # Find the image extension.
-    ext = getExtension(img)
-
-    # base64 media type.
-    mime = None
-    if ext == 'jpg' or ext == 'jpeg':
-      mime = 'jpeg'
-    elif ext=='png':
-      mime = 'png'
-    else:
-      # Returns an error for images other than png and jpg.
-      raise ValueError('Invalid image type')
+    # For image paths.
+    # Get MIME type.
+    mime = getMime(img)
 
     # Image bytes object.
     with open(img, 'rb') as f:
       bytes = f.read()
     
     # Bytes object to base64.
-    b64 = base64.b64encode(bytes).decode('utf-8')
-
-    # Convert base64 to DataURL and return.
-    return f'data:image/{mime};base64,{b64}'
+    return base64.b64encode(bytes).decode('ascii'), mime
   else:
+    # Return an error if the input is not an ndarray image or image path.
     raise ValueError('Image parameters should be file paths or ndarray images')
 
 def detectDataURL(str):
-  """Detecting data URLs.
+  """Detecting Data URL.
       data URI - MDN https://developer.mozilla.org/en-US/docs/data_URIs
       The "data" URL scheme: http://tools.ietf.org/html/rfc2397
       Valid URL Characters: http://tools.ietf.org/html/rfc2396#section2
@@ -75,17 +78,35 @@ def detectDataURL(str):
   return mime, b64
 
 def getExtension(path):
-  """Returns the file extension.
+  """Return extension from file path.
   Args:
     path: File Path.
   Returns:
     File extension, e.g. png.
   """
-  # Find the image extension.
+  # Get extension.
   name = os.path.basename(path).split('.')
   if len(name) < 2:
     return None
   return name[1].lower()
+
+def getMime(path):
+  """Return MIME type from file path.
+  Args:
+    path: File Path.
+  Returns:
+    MIME type, e.g. png.
+  """
+  # Get extension.
+  ext = getExtension(path)
+
+  # Return MIME type.
+  if ext == 'jpg' or ext == 'jpeg':
+    return 'jpeg'
+  elif ext=='png':
+    return 'png'
+  else:
+    return ext
 
 def show(title, img):
 # def show(title, img, scaleWd = 500):
