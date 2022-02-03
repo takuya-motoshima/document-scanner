@@ -2,11 +2,14 @@
 Detect documents from images.
 
 ## Getting Started
-sInstalling OpenCV for Python3
+Install dependent packages.
 ```sh
 pip3 install opencv-python
 pip3 install opencv-contrib-python
 pip3 install matplotlib
+pip3 install google-cloud-vision
+pip3 install python-dotenv
+pip3 install dotmap
 ```
 ## Usage
 

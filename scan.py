@@ -4,7 +4,6 @@ import utils
 import argparse
 import os
 import re
-import base64
 import logging
 
 def main():
@@ -22,7 +21,7 @@ def main():
   # Resize the image.
   resizedImg, resizeRatio = resizeImg(img, ht=600)
   # logging.debug(f'resizeRatio={resizeRatio}')
-  utils.show('Original image', resizedImg)
+  utils.show('Original', resizedImg)
 
   # Make a copy.
   copyResizedImg = resizedImg.copy()
@@ -243,5 +242,5 @@ def resizeImg(img, wd=None, ht=None, interpolation = cv2.INTER_AREA):
     resizedImg = cv2.resize(img, (ht, wd), interpolation)
     return resizedImg, resizeRatio
 
-if __name__ == "__main__":
+if __name__ == '__main__':
   main()
