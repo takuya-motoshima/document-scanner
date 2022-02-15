@@ -30,7 +30,6 @@ python scan.py --help
 #                         ratio. Typing as a width:height ratio (like 4:5 or
 #                         1.618:1).
 ```
-
 Find the document.
 ```sh
 python scan.py -i img/license.png

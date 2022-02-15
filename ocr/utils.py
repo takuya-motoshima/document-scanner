@@ -5,8 +5,6 @@ import os.path
 import re
 from importlib import import_module
 import json
-import colorsys
-import random
 from urllib import request
 # tkinter changed to read dynamically in show function.
 # import tkinter as tk
@@ -153,48 +151,6 @@ def writeJson(path, data):
   """
   with open(path, 'w', encoding='utf-8') as f:
     json.dump(data, f, ensure_ascii=False, indent=2, separators=(',', ': '))
-
-def drawRect(img, pt1, pt2, color, label, drawTextBackground = True):
-  """Draw rectangle with text.
-  Args:
-    img: CV2 Image object.
-    pt1: The upper left point of the rectangle.
-    pt2: The bottom right dot of the rectangle.
-    color: Rectangle background color.
-    label: text.
-    drawTextBackground: Whether to draw a text background.
-  """
-  # Rectangle.
-  cv2.rectangle(img, pt1, pt2, color, thickness=1)
-
-  # Text boundaries.
-  font = cv2.FONT_HERSHEY_SIMPLEX
-  scale = .5
-  thk = 1
-  (width, height), _ = cv2.getTextSize(label, font, scale, thk)
-  x, y = pt1
-
-  # Text background.
-  margin = 10
-  labelColor = color
-  if drawTextBackground:
-    cv2.rectangle(img, (x, y - height - margin), (x + width + margin, y), color, thickness=-1)
-    labelColor = (0, 0, 0)
-
-  # Draw text.
-  cv2.putText(img, label, (x + int(margin / 2), y - int(margin / 2)), font, scale, labelColor, thk)
-
-def randColor(bright=1):
-  """Generate random colors.
-  Args:
-    bright: brightness.
-  Returns:
-    Returns BGR format colors.
-  """
-  hue = random.random()
-  sat = random.random()
-  val = bright
-  return tuple(int(round(c * 255)) for c in colorsys.hsv_to_rgb(hue, sat, val))
 
 def calcIoU(rectA, rectB):
   """Calculate IoU for two rectangles.

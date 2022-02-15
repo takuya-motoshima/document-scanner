@@ -24,9 +24,6 @@ const client = new vision.ImageAnnotatorClient({credentials: creds});
   let [res] = await client.documentTextDetection(imgPath);
   const doc = res.fullTextAnnotation;
   console.log(`doc.text=${doc.text.replace(/\n/g, '')}`);
-  const jsonPath = `output/${moment().format('YYYYMMDDHHmmss')}.json`;
-  fs.writeFileSync(jsonPath, JSON.stringify(res, null, 2));
-  console.log(`Write ${jsonPath}`);
 
   // Print the found characters one by one.
   page = doc.pages[0];

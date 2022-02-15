@@ -24,7 +24,7 @@ def main(opts = dict()):
   # Initialize options.
   opts = dict(input = None) | opts
   opts = DotMap(opts)
-  print(f'opts.input={opts.input[:50]}')
+  logging.debug(f'opts.input={opts.input[:50]}')
 
   # Validate options.
   validOptions(opts)
@@ -37,37 +37,33 @@ def main(opts = dict()):
 
   # Detect text from image.
   texts = detectText(img, utils.getMime(opts.input))
-  exit()
-
-  # Could not find the text in the image.
   if not texts:
-    print('Text not found in image')
+    # Could not find the text in the image.
+    logging.debug('Text not found in image')
     return None
 
   # Find the rectangular point of the symbol from the result of document_text_detection.
-  syms = findSymbolRectangle(texts, img)
-  print('Sorted syms:')
-  for sym in syms:
-    print('\t', *sym.vertices, f':{sym.text}')
+  syms = findRectangleSymbol(texts, img)
+  # logging.debug(f'syms={syms}')
 
   # Get annotations.
   annots = loadAnnotationXML()
-  print('annots:')
-  for annot in annots:
-    print('\t', *annot.rect, f':{annot.name}')
+  # logging.debug(f'annots={annots}')
 
   # Draw annotation rectangle.
-  ht, wd, _ = img.shape
+  height, width, _ = img.shape
   for annot in annots:
     pt1, _, pt2, _ = annot.rect
     cv2.rectangle(img,
-      [round(pt1[0] * wd), round(pt1[1] * ht)],
-      [round(pt2[0] * wd), round(pt2[1] * ht)],
+      [round(pt1[0] * width), round(pt1[1] * height)],
+      [round(pt2[0] * width), round(pt2[1] * height)],
       (0,0,255), 2)
   utils.show('symbol', img)
 
-  # Template Matching.
-  output = templateMatch(annots, syms)
+  # Find text that inscribes matches the field template rectangle.
+  matches = matching(annots, syms)
+  logging.debug(f'matches={matches}')
+  return matches
 
 def validOptions(opts): 
   """Validate options.
@@ -91,10 +87,6 @@ def detectText(img, mime):
   Returns
     Returns text detection result.
   """
-  print('>>>>>>>>>>>>>>>>mime=', mime)
-  exit()
-
-
   # Load .env.
   envPath = './.env';
   if not os.path.exists(envPath):
@@ -111,12 +103,13 @@ def detectText(img, mime):
 
   # Detect text.
   content = cv2.imencode(f'.{mime}', img)[1].tostring()
-  res = client.document_text_detection(image = vision.Image(content=content),
-                                        image_context = vision.ImageContext(language_hints =['ja']))
+  res = client.document_text_detection(
+    image = vision.Image(content=content),
+    image_context = vision.ImageContext(language_hints =['ja']))
 
   # Write OCR results to a file for debugging.
   now = datetime.datetime.now().strftime('%Y%m%d%H%M%S')
-  utils.writeJson(f'output/{now}.json', vision.AnnotateImageResponse.to_dict(res))
+  utils.writeJson(f'output/text_detection_{now}.json', vision.AnnotateImageResponse.to_dict(res))
 
   # Returns None if the text cannot be found.
   if not res:
@@ -125,7 +118,7 @@ def detectText(img, mime):
   # Returns the text detection result of the first image.
   return res.full_text_annotation.pages[0]
 
-def findSymbolRectangle(texts, img, ndigits = 3):
+def findRectangleSymbol(texts, img, ndigits = 3):
   """Find the rectangular point of the symbol from the result of document_text_detection.
   Args:
     texts: Text detection result of document_text_detection.
@@ -135,7 +128,7 @@ def findSymbolRectangle(texts, img, ndigits = 3):
     Returns a symbol rectangle point.
   """
   # Find the rectangular points of all the symbols.
-  ht, wd, _ = img.shape
+  height, width, _ = img.shape
   syms = []
   for block in texts.blocks:
     for par in block.paragraphs:
@@ -144,7 +137,7 @@ def findSymbolRectangle(texts, img, ndigits = 3):
           # Convert the rectangular point of a symbol from px to ratio.
           syms.append(DotMap(dict(
             text = sym.text,
-            rect = np.array([[round(pt.x / wd, ndigits), round(pt.y / ht, ndigits)] for pt in sym.bounding_box.vertices])
+            rect = np.array([[round(pt.x / width, ndigits), round(pt.y / height, ndigits)] for pt in sym.bounding_box.vertices])
           )))  
 
   # Sort the symbol rectangles from top left to bottom right.
@@ -159,23 +152,23 @@ def loadAnnotationXML(ndigits = 3):
     The points of the rectangle are in the order of upper left, upper right, lower right, lower left.
   """
   # Parse XML.
-  tree = ET.parse('annotations/license.xml')
+  tree = ET.parse('./annotations/license.xml')
   root = tree.getroot()
 
   # Overall width and height of the image.
   size = root.find('size')
-  wd = float(size.find('width').text)
-  ht = float(size.find('height').text)
+  width = float(size.find('width').text)
+  height = float(size.find('height').text)
 
   # Coordinates for each field.
   annots = []
   for obj in root.findall('object'):
     # Convert points from px to ratios.
     bb = obj.find('bndbox')
-    xmin = round(float(bb.find('xmin').text) / wd, ndigits)
-    ymin = round(float(bb.find('ymin').text) / ht, ndigits)
-    xmax = round(float(bb.find('xmax').text) / wd, ndigits)
-    ymax = round(float(bb.find('ymax').text) / ht, ndigits)
+    xmin = round(float(bb.find('xmin').text) / width, ndigits)
+    ymin = round(float(bb.find('ymin').text) / height, ndigits)
+    xmax = round(float(bb.find('xmax').text) / width, ndigits)
+    ymax = round(float(bb.find('ymax').text) / height, ndigits)
 
     # To rectangular four points.
     annots.append(DotMap(dict(
@@ -184,50 +177,37 @@ def loadAnnotationXML(ndigits = 3):
     )))
   return annots
 
-def templateMatch(annots, syms, wd, ht):
-  """Find the text rectangle adjacent to the template field rectangle and group the found text symbols as the field string.
+def matching(annots, syms):
+  """Find text that inscribes matches the field template rectangle.
   Args:
     annots: Template annotation.
     syms: Rectangle point of symbol.
-    wd: Image width.
-    ht: Image height.
   Returns:
-    Text that matches the fields in the template.
+    Returns the found text.
   """
-  # OCR results. The key is the field name and the value is the rectangular point and text..
-  output = dict.fromkeys([annot.get('name') for annot in annots], None)
-  for name in output:
-    output[name] = DotMap(dict(text = '', rect = dict(xmin = .0, ymin = .0, xmax = .0, ymax = .0)))
-  print(f'output={output}')
+  # Initialize the return value. (Key is field name, value is rectangular point and text).
+  matches = dict.fromkeys([annot.get('name') for annot in annots], None)
+  for name in matches:
+    matches[name] = DotMap(dict(text = '', rect = dict(xmin = .0, ymin = .0, xmax = .0, ymax = .0)))
 
-  # Loop annotation rectangle.
+  # Read the field coordinates of the template.
   for annot in annots:
-    # Annotation rectangle point.
+    # Template field rectangle.
     annotRect = (annot.rect[0][0], annot.rect[0][1], annot.rect[2][0], annot.rect[2][1])
     for sym in syms:
-      # Symbol rectangle point.
+      # Detected text symbol rectangle.
       symRect = (sym.rect[0][0], sym.rect[0][1], sym.rect[2][0], sym.rect[2][1])
 
-      # Calculate IoU for annotation rectangles and symbol rectangles.
-      iou, interArea, _, symArea = utils.calcIoU(annotRect, symRect)
-
       # Skip if template and symbol do not intersect.
+      iou, interArea, _, symArea = utils.calcIoU(annotRect, symRect)
       if iou == 0:
         continue
 
-      # Intersection area / symbol rectangular area.
-      overlapRatio = round(interArea / symArea, 3)
-      print(f'{annot.name} -> {sym.text} (iou={iou}, overlapRatio={overlapRatio})')
+      # Calculate the overlap between the template field and the detected text symbol.
+      ratio = round(interArea / symArea, 3)
+      logging.debug(f'{annot.name} -> {sym.text} (iou={iou}, ratio={ratio})')
 
-      # When the area where the symbol rectangle and the annotation rectangle overlap is greater than or equal to the threshold value.
-      if (overlapRatio) > .5:
-        output[annot.name].text += sym.text
-        rect = output[annot.name].rect
-        rect.xmin = min(rect.xmin, symRect[0])
-        rect.ymin
-        rect.xmax
-        rect.ymax
-
-  print('Output:')
-  for outpu in output.items():
-    print('\t', outpu)
+      # If the template field and the detection text are inscribed, get that text.
+      if ratio > .5:
+        matches[annot.name].text += sym.text
+  return matches

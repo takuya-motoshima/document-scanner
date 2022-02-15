@@ -1,10 +1,13 @@
 import logging
+import datetime
 
 # Initialize the logger.
+now = datetime.datetime.now().strftime('%Y%m%d')
 logging.basicConfig(
-  filename='scan.log',
-  level=logging.DEBUG,
-  format="%(levelname)s - %(asctime)s -> %(filename)s: %(message)s")
+  filename = f'logs/{now}.log',
+  level = logging.DEBUG,
+  format = '%(levelname)s - %(asctime)s -> %(filename)s: %(message)s',
+  encoding = 'utf-8')
 # # Logger initialization flag.
 # initialized = False
 # def debug(*args):

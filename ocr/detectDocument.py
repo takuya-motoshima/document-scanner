@@ -21,9 +21,9 @@ def main(opts = dict()):
   # Initialize options.
   opts = dict(input = None, output = None, aspect = None) | opts
   opts = DotMap(opts)
-  print(f'opts.input={opts.input[:50]}')
-  print(f'opts.output={opts.output}')
-  print(f'opts.aspect={opts.aspect}')
+  logging.debug(f'opts.input={opts.input[:50]}')
+  logging.debug(f'opts.output={opts.output}')
+  logging.debug(f'opts.aspect={opts.aspect}')
 
   # Validate options.
   validOptions(opts)
@@ -97,7 +97,7 @@ def validOptions(opts):
   if not opts.input:
     raise ValueError('input option required')
 
-  # Input options only allow image path or data URLs.
+  # Input options only allow image path or data URL.
   if not utils.isDataURL(opts.input) and not os.path.exists(opts.input) and os.path.isfile(opts.input):
     raise ValueError(f'{opts.input} Image file not found')
 
