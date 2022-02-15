@@ -1,5 +1,7 @@
 import argparse
 import ocr
+from ocr.logger import logging
+# from pprint import pprint
 
 def main():
   # Parse arguments.
@@ -12,12 +14,20 @@ def main():
   opts = vars(parser.parse_args())
 
   # Detect document from image.
-  dataURL = ocr.detectDocument(opts)
-  print(f'dataURL={dataURL[:50]}')
+  dataURL = ocr.detect(opts)
+  logging.debug(f'dataURL={dataURL[:50]}')
+  if not dataURL:
+    logging.debug('The document could not be detected from the image')
+    exit()
 
   # OCR.
-  matches = ocr.scanDriverlicense(dict(input = dataURL))
-  print(f'matches={matches}')
+  matches = ocr.scan(dict(input = dataURL))
+  if not matches:
+    logging.debug('The text could not be detected')
+    exit()
+  
+  for key, val in matches.items():
+    print(f'{key} -> {val.text}')
 
 if __name__ == '__main__':
-  main()
+  main()  

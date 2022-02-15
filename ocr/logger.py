@@ -22,4 +22,3 @@ logging.basicConfig(
 #   # Join messages.
 #   message = ' '.join(map(str, args))
 #   logging.debug(message)
-#   print(*args)

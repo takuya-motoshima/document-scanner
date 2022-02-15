@@ -1,249 +1,212 @@
+from google.cloud import vision
+from google.oauth2 import service_account
+from dotenv import dotenv_values
+import json
+import os
 import cv2
 import numpy as np
-import utils
-import argparse
-import os
-import re
-import logging
+import xml.etree.ElementTree as ET
+import datetime
+from dotmap import DotMap
+import ocr.utils as utils
+from ocr.logger import logging
 
-def main(opts):
-  """Detect document from image.
+def main(opts = dict()):
+  """Scan document.
   Args:
-    opts.
+    opts.input: Image path or Data URL.
   Returns:
-    Return detected document image.
+    Return the text detected from the document.
   """
-  # Logging Into A File.
-  logging.basicConfig(filename='scan.log', level=logging.DEBUG, format="%(asctime)s -> %(levelname)s: %(message)s")
   logging.debug('begin')
 
-  # Parse arguments.
-  opts = parseArguments()
-  logging.debug(f'opts={opts}')
+  # Initialize options.
+  opts = dict(input = None) | opts
+  opts = DotMap(opts)
+  logging.debug(f'opts.input={opts.input[:50]}')
+
+  # Validate options.
+  validOptions(opts)
 
   # load an image.
-  img = cv2.imread(opts.input)
+  if utils.isDataURL(opts.input):
+    img = utils.toNdarray(opts.input)
+  else:
+    img = cv2.imread(opts.input)
 
-  # Resize the image.
-  resizedImg, resizeRatio = resizeImg(img, ht=600)
-  # logging.debug(f'resizeRatio={resizeRatio}')
-  utils.show('original', resizedImg)
-
-  # Make a copy.
-  copyImg = resizedImg.copy()
-
-  # Find the contour of the rectangle with the largest area.
-  maxCnt = findRectangleContour(resizedImg)
-
-  # Rectangle contour not found.
-  if maxCnt is None:
-    logging.debug('Rectangle contour not found')
+  # Detect text from image.
+  texts = detectText(img, utils.getMime(opts.input))
+  if not texts:
+    # Could not find the text in the image.
+    logging.debug('Text not found in image')
     return None
 
-  # Draw a contour.
-  cv2.drawContours(copyImg, [maxCnt], -1, (0,255,0), 2)
-  utils.show('marked', copyImg)
+  # Find the rectangular point of the symbol from the result of document_text_detection.
+  syms = findRectangleSymbol(texts, img)
+  # logging.debug(f'syms={syms}')
 
-  # Apply the four point tranform to obtain a "birds eye view" of the image.
-  warpImg = fourPointTransform(maxCnt/resizeRatio, img)
-  warpImg, _ = resizeImg(warpImg, ht=800)
-  utils.show('warped', warpImg)
+  # Get annotations.
+  annots = loadAnnotationXML()
+  # logging.debug(f'annots={annots}')
 
-  # Resizes the document image with the specified aspect ratio.
-  if opts.aspectRatio:
-    wd, ht, _ = warpImg.shape
-    wdRatio, htRatio = list(map(float, opts.aspectRatio.split(':')))
-    resizeWd = wd
-    resizeHt = ht
-    # Resize so that the width and height after resizing are not smaller than before resizing.
-    if (ht / wd) < (htRatio / wdRatio):
-      resizeHt = round(wd * (htRatio / wdRatio))
-    else:
-      resizeWd = round(ht / (htRatio / wdRatio))
-    logging.debug(f'resize={resizeWd}/{resizeHt}')
-    warpImg = cv2.resize(warpImg, (resizeWd, resizeHt), cv2.INTER_AREA)
-    utils.show(f'resize to {wdRatio}:{htRatio} ratio', warpImg)
+  # Draw annotation rectangle.
+  height, width, _ = img.shape
+  for annot in annots:
+    pt1, _, pt2, _ = annot.rect
+    cv2.rectangle(img,
+      [round(pt1[0] * width), round(pt1[1] * height)],
+      [round(pt2[0] * width), round(pt2[1] * height)],
+      (0,0,255), 2)
+  utils.show('symbol', img)
 
-  # Write the image to a file if you have the output option.
-  if opts.output:
-    cv2.imwrite(opts.output, warpImg)
-    logging.debug(f'Output {opts.output}')
+  # Find text that inscribes matches the field template rectangle.
+  matches = matching(annots, syms)
+  # logging.debug(f'matches={matches}')
+  return matches
 
-  # Print the image Data URL if you have a print option.
-  if opts.printBase64:
-    b64, _ = utils.toBase64(warpImg, utils.getMime(opts.input))
-    print(b64)
-
-def parseArguments():
-  """Parses and returns command arguments.
-  Returns:
-    Return the parsed result in the format (image = <string>, aspectRatio = <string>).
-  """
-  # Parse.
-  parser = argparse.ArgumentParser()
-  parser.add_argument('-i', '--input', type=str, required=True, help='Image path or Data URL')
-  parser.add_argument('-o', '--output', type=str, help='Output image path of the found document')
-  parser.add_argument('-r', '--aspect', dest='aspectRatio', type=str, help='Resize the scanned document to the specified aspect ratio. Typing as a width:height ratio (like 4:5 or 1.618:1).')
-  parser.add_argument('-p', '--print-base64', dest='printBase64', action='store_true', help='Print the base64 of the document')
-  opts = parser.parse_args()
-
-  # Image option validation.
-  res = utils.detectDataURL(opts.input)
-  if res:
-    # For Data URL.
-    mime = res[0]
-    if mime != 'image/png' and mime != 'image/jpeg':
-      raise ValueError('Unsupported media type, Images can process PNG or JPG')
-  else:
-    # If it is not a Data URL, treat it as an image path.
-    if not os.path.exists(opts.input):
-      raise ValueError('File path not found')
-    elif not os.path.isfile(opts.input):
-      raise ValueError('It\'s not a file path')
-
-  # Aspect ratio option validation.
-  if opts.aspectRatio is not None:
-    found = re.match(r'^((?!0\d)\d*(?:\.\d+)?):((?!0\d)\d*(?:\.\d+)?)$', opts.aspectRatio)
-    if not found:
-      raise ValueError('Invalid format, typing as a width:height ratio (like 4:5 or 1.618:1)')
-    wdRatio = found.group(1)
-    htRatio = found.group(2)
-    if float(wdRatio) == 0 or float(htRatio) == 0:
-      raise ValueError('Zero cannot be used for height or width ratio')
-  return opts
-
-def findRectangleContour(img):
-  """Find the contour of the rectangle with the largest area.
+def validOptions(opts): 
+  """Validate options.
   Args:
-    img: ndarray type image.
-  Returns:
-    Return a list (ndarray) of the points (x, y) found on the contour.
+    opts.input: Image path or Data URL.
+  Raises:
+    ValueError: If there are invalid options
   """
-  # Grayscale.
-  grayImg = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-  utils.show('grayscale', grayImg)
+  # input option required.
+  if not opts.input:
+    raise ValueError('input option required')
 
-  # Remove image noise.
-  grayImg = cv2.medianBlur(grayImg, 5)
-  grayImg = cv2.erode(grayImg, kernel=np.ones((5,5),np.uint8), iterations=1)
-  grayImg = cv2.adaptiveThreshold(grayImg, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY, 11, 2)
-  utils.show('noise reduction', grayImg)
-  edgedImg = cv2.Canny(grayImg, 30, 400)
-  # edgedImg = cv2.Canny(grayImg, 100, 200, apertureSize=3)
-  utils.show('edged', edgedImg)
+  # Input options only allow image path or data URL.
+  if not utils.isDataURL(opts.input) and not os.path.exists(opts.input) and os.path.isfile(opts.input):
+    raise ValueError(f'{opts.input} Image file not found')
 
-  # Find the contour.
-  cnts, _ = cv2.findContours(edgedImg, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
-  logging.debug(f'length of countours {len(cnts)}')
+def detectText(img, mime):
+  """Detect text from image.
+  Args:
+    img: CV2 Image object.
+  Returns
+    Returns text detection result.
+  """
+  # Load .env.
+  envPath = './.env';
+  if not os.path.exists(envPath):
+    raise RuntimeError(f'{envPath} not found')
+  config = dotenv_values(envPath)
 
-  # If you can't find the contour.
-  if not cnts:
+  # Find google cloud credentials from ".env".
+  if 'GOOGLE_CREDS' not in config:
+    raise RuntimeError('GOOGLE_CREDS not found in ".env"')
+  creds = json.loads(config['GOOGLE_CREDS'])
+  
+  # Instantiates a client.
+  client = vision.ImageAnnotatorClient(credentials = service_account.Credentials.from_service_account_info(creds))
+
+  # Detect text.
+  content = cv2.imencode(f'.{mime}', img)[1].tostring()
+  res = client.document_text_detection(
+    image = vision.Image(content=content),
+    image_context = vision.ImageContext(language_hints =['ja']))
+
+  # Write OCR results to a file for debugging.
+  now = datetime.datetime.now().strftime('%Y%m%d%H%M%S')
+  utils.writeJson(f'output/text_detection_{now}.json', vision.AnnotateImageResponse.to_dict(res))
+
+  # Returns None if the text cannot be found.
+  if not res:
     return None
 
-  # Find the rectangular contour with the largest area from the found contours.
-  cnts = sorted(cnts, key=cv2.contourArea, reverse=True)
-  for cnt in cnts:
-    # Approximate the contour.
-    peri = cv2.arcLength(cnt, True)
-    approx = cv2.approxPolyDP(cnt, 0.02 * peri, True)
-    # approx = cv2.approxPolyDP(cnt, 0.1 * peri, True)
-    # approx = cv2.approxPolyDP(cnt, 0.005 * peri, True)
+  # Returns the text detection result of the first image.
+  return res.full_text_annotation.pages[0]
 
-    # if our approximated contour has four points, we can assume it is rectangle.
-    if len(approx) == 4:
-      return approx
-
-  # If you can't find the rectangle contour.
-  return None
-  # cnt = max(cnts, key = cv2.contourArea)
-  # return cv2.approxPolyDP(cnt, 0.02 * cv2.arcLength(cnt, True), True)
-
-def convertContourToRect(cnt):
-  """Convert contour points (x, y) to four external rectangle points (x, y).
+def findRectangleSymbol(texts, img, ndigits = 3):
+  """Find the rectangular point of the symbol from the result of document_text_detection.
   Args:
-    cnt: Contour points (x, y).
+    texts: Text detection result of document_text_detection.
+    img: CV2 Image object.
+    ndigits: Number of decimal places in the ratio of rectangular points.
   Returns:
-    Return a rectangular list of points (4 rows 2 columns).
+    Returns a symbol rectangle point.
   """
-  # Initialzie a list of coordinates that will be ordered such that the first entry in the list is the top-left, the second entry is the top-right, the third is the bottom-right, and the fourth is the bottom-left.
-  pts = cnt.reshape(4, 2)
-  rect = np.zeros((4, 2), dtype = 'float32')
+  # Find the rectangular points of all the symbols.
+  height, width, _ = img.shape
+  syms = []
+  for block in texts.blocks:
+    for par in block.paragraphs:
+      for word in par.words:
+        for sym in word.symbols:
+          # Convert the rectangular point of a symbol from px to ratio.
+          syms.append(DotMap(dict(
+            text = sym.text,
+            rect = np.array([[round(pt.x / width, ndigits), round(pt.y / height, ndigits)] for pt in sym.bounding_box.vertices])
+          )))  
 
-  # The top-left point will have the smallest sum, whereas the bottom-right point will have the largest sum.
-  sum = pts.sum(axis = 1)
-  rect[0] = pts[np.argmin(sum)] # top-left
-  rect[2] = pts[np.argmax(sum)] # bottom-right
+  # Sort the symbol rectangles from top left to bottom right.
+  return sorted(syms, key=lambda sym: np.linalg.norm(np.array((sym.rect[0][0], sym.rect[0][1])) - np.array([0,0])))
 
-  # Now, compute the difference between the points, the top-right point will have the smallest difference, whereas the bottom-left will have the largest difference.
-  diff = np.diff(pts, axis=1)
-  rect[1] = pts[np.argmin(diff)] # top-right
-  rect[3] = pts[np.argmax(diff)] # bottom-left
-
-  # Return the rectangle coordinates of the contour.
-  # logging.debug(f'rect={rect}')
-  return rect
-
-def fourPointTransform(cnt, origImg):
-  """Return a Keystone correction image (ndarray) of a rectangle on the image.
+def loadAnnotationXML(ndigits = 3):
+  """Returns the rectangular point of the OCR field.
   Args:
-    cnt: Contour points (x, y).
-    origImg: Original image of ndarray type.
+    ndigits: Number of decimal places in the ratio of rectangular points.
   Returns:
-    Return a Keystone correction image (ndarray).
+    Returns a list where the key is the field name and the value is a rectangular point.
+    The points of the rectangle are in the order of upper left, upper right, lower right, lower left.
   """
-  # Contour quadrilateral coordinates.
-  rect = convertContourToRect(cnt)
+  # Parse XML.
+  tree = ET.parse('./ocr/annotations/license.xml')
+  root = tree.getroot()
 
-  # Compute the width of the new image, which will be the maximum distance between bottom-right and bottom-left x-coordiates or the top-right and top-left x-coordinates
-  (tl, tr, br, bl) = rect
-  aWd = np.sqrt(((br[0] - bl[0]) ** 2) + ((br[1] - bl[1]) ** 2))
-  bWd = np.sqrt(((tr[0] - tl[0]) ** 2) + ((tr[1] - tl[1]) ** 2))
-  maxWd = max(int(aWd), int(bWd))
+  # Overall width and height of the image.
+  size = root.find('size')
+  width = float(size.find('width').text)
+  height = float(size.find('height').text)
 
-  # Compute the height of the new image, which will be the maximum distance between the top-right and bottom-right y-coordinates or the top-left and bottom-left y-coordinates
-  aHt = np.sqrt(((tr[0] - br[0]) ** 2) + ((tr[1] - br[1]) ** 2))
-  bHt = np.sqrt(((tl[0] - bl[0]) ** 2) + ((tl[1] - bl[1]) ** 2))
-  maxHt = max(int(aHt), int(bHt))
+  # Coordinates for each field.
+  annots = []
+  for obj in root.findall('object'):
+    # Convert points from px to ratios.
+    bb = obj.find('bndbox')
+    xmin = round(float(bb.find('xmin').text) / width, ndigits)
+    ymin = round(float(bb.find('ymin').text) / height, ndigits)
+    xmax = round(float(bb.find('xmax').text) / width, ndigits)
+    ymax = round(float(bb.find('ymax').text) / height, ndigits)
 
-  # Now that we have the dimensions of the new image, construct the set of destination points to obtain a "birds eye view", (i.e. top-down view) of the image, again specifying points in the top-left, top-right, bottom-right, and bottom-left order.
-  dst = np.array([[0, 0], [maxWd - 1, 0], [maxWd - 1, maxHt - 1], [0, maxHt - 1]], dtype = 'float32')
+    # To rectangular four points.
+    annots.append(DotMap(dict(
+      name = obj.find('name').text,
+      rect = np.array(((xmin, ymin), (xmax, ymin), (xmax, ymax), (xmin, ymax)))
+    )))
+  return annots
 
-  # Compute the perspective transform matrix and then apply it.
-  M = cv2.getPerspectiveTransform(rect, dst)
-  return cv2.warpPerspective(origImg, M, (maxWd, maxHt))
-
-def resizeImg(img, wd=None, ht=None, interpolation = cv2.INTER_AREA):
-  """Resize the image.
+def matching(annots, syms):
+  """Find text that inscribes matches the field template rectangle.
   Args:
-    img: ndarray type image.
-    wd: Width after resizing.
-    ht: Height after resizing.
-    interpolation: Interpolation flag that takes one of the following methods.
-                    cv2.INTER_NEAREST: nearest neighbor interpolation.
-                    cv2.INTER_LINEAR: bilinear interpolation.
-                    cv2.INTER_CUBIC: bicubic interpolation.
-                    cv2.INTER_AREA: resampling using pixel area relation. It may be a preferred method for image decimation, as it gives moire'-free results. But when the image is zoomed, it is similar to the INTER_NEAREST method.
-                    cv2.INTER_LANCZOS4: Lanczos interpolation over 8x8 neighborhood.
+    annots: Template annotation.
+    syms: Rectangle point of symbol.
   Returns:
-    Return a resized ndarray image.
+    Returns the found text.
   """
-  resizeRatio = 1
-  origWd, origHt, _ = img.shape
-  # logging.debug(f'origWd={origWd}, origHt={origHt}')
-  if wd is None and ht is None:
-    return img, resizeRatio
-  elif wd is None:
-    resizeRatio = ht / origHt
-    wd = int(origWd * resizeRatio)
-    # logging.debug(f'wd={wd}, ht={ht}')
-    resizedImg = cv2.resize(img, (ht, wd), interpolation)
-    return resizedImg, resizeRatio
-  else:
-    resizeRatio = wd / origWd
-    ht = int(origHt * resizeRatio)
-    # logging.debug(f'wd={wd}, ht={ht}')
-    resizedImg = cv2.resize(img, (ht, wd), interpolation)
-    return resizedImg, resizeRatio
+  # Initialize the return value. (Key is field name, value is rectangular point and text).
+  matches = dict.fromkeys([annot.get('name') for annot in annots], None)
+  for name in matches:
+    matches[name] = DotMap(dict(text = '', rect = dict(xmin = .0, ymin = .0, xmax = .0, ymax = .0)))
 
-if __name__ == '__main__':
-  main()
+  # Read the field coordinates of the template.
+  for annot in annots:
+    # Template field rectangle.
+    annotRect = (annot.rect[0][0], annot.rect[0][1], annot.rect[2][0], annot.rect[2][1])
+    for sym in syms:
+      # Detected text symbol rectangle.
+      symRect = (sym.rect[0][0], sym.rect[0][1], sym.rect[2][0], sym.rect[2][1])
+
+      # Skip if template and symbol do not intersect.
+      iou, interArea, _, symArea = utils.calcIoU(annotRect, symRect)
+      if iou == 0:
+        continue
+
+      # Calculate the overlap between the template field and the detected text symbol.
+      ratio = round(interArea / symArea, 3)
+      logging.debug(f'{annot.name} -> {sym.text} (iou={iou}, ratio={ratio})')
+
+      # If the template field and the detection text are inscribed, get that text.
+      if ratio > .5:
+        matches[annot.name].text += sym.text
+  return matches

@@ -1,2 +1,2 @@
-from ocr.detectDocument import main as detectDocument
-from ocr.scanDriverlicense import main as scanDriverlicense
+from ocr.detect import main as detect
+from ocr.scan import main as scan

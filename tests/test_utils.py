@@ -79,7 +79,6 @@ class TestUtils(unittest.TestCase):
 			with self.subTest(case):
 				input, expected = case.values()
 				iou, interArea, aArea, bArea = utils.calcIoU(input[0], input[1])
-				# print(f'iou={iou}, interArea={interArea}')
 				self.assertEqual([iou, interArea], expected)
 
 if __name__ == '__main__':
