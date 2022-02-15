@@ -1,9 +1,9 @@
 import unittest
-import utils
+import ocr.utils as utils
 import numpy as np
 
 class TestUtils(unittest.TestCase):
-	def test_right_for_detect_data_url(self):
+	def test_right_detectDataURL(self):
 		cases = [
 			'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQAQMAAAAlPW0iAAAABlBMVEUAAAD///+l2Z/dAAAAM0lEQVR4nGP4/5/h/1+G/58ZDrAz3D/McH8yw83NDDeNGe4Ug9C9zwz3gVLMDA/A6P9/AFGGFyjOXZtQAAAAAElFTkSuQmCC',
 			'data:image/svg+xml;charset=utf-8,.',
@@ -23,7 +23,7 @@ class TestUtils(unittest.TestCase):
 				res = utils.detectDataURL(case)
 				self.assertIsNotNone(res)
 
-	def test_wrong_for_detect_data_url(self):
+	def test_wrong_detectDataURL(self):
 		cases = [
 			'dataxbase64',
 			'data:HelloWorld',
@@ -40,7 +40,7 @@ class TestUtils(unittest.TestCase):
 				res = utils.detectDataURL(case)
 				self.assertIsNone(res)
 
-	def test_right_for_to_data_url(self):
+	def test_right_toDataURL(self):
 		cases = [
 			# Correct image path.
 			['img/license.png', None],
@@ -53,6 +53,34 @@ class TestUtils(unittest.TestCase):
 				img, mime = case
 				res = utils.toDataURL(img, mime)
 				self.assertRegex(res,  r'^data:..*$')
+
+	def test_right_toDataURL(self):
+		cases = [
+			# Correct image path.
+			['img/license.png', None],
+
+			# Image of correct ndarray type.
+			[np.zeros((100, 100, 3)), 'png']
+		]
+		for case in cases:
+			with self.subTest(case):
+				img, mime = case
+				b64, _ = utils.toDataURL(img, mime)
+				self.assertRegex(b64,  r'^data:..*$')
+
+	def test_right_calcIoU(self):
+		cases = [
+			dict(input = [[0, 0, 10, 10], [0, 0, 10, 10]], expected = [1.0, 100]),
+			dict(input = [[0, 0, 10, 10], [1, 1, 11, 11]], expected = [0.681, 81]),
+			dict(input = [[0, 0, 10, 10], [0, 5, 10, 15]], expected = [0.333, 50]),
+			dict(input = [[0, 0, 10, 10], [10, 0, 20, 10]], expected = [0.0, 0]),
+		]
+		for case in cases:
+			with self.subTest(case):
+				input, expected = case.values()
+				iou, interArea, aArea, bArea = utils.calcIoU(input[0], input[1])
+				# print(f'iou={iou}, interArea={interArea}')
+				self.assertEqual([iou, interArea], expected)
 
 if __name__ == '__main__':
   unittest.main()

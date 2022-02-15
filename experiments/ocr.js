@@ -33,7 +33,6 @@ const client = new vision.ImageAnnotatorClient({credentials: creds});
   for (let [i, block] of Object.entries(page.blocks))
     for (let [j, par] of Object.entries(block.paragraphs))
       for (let [k, word] of Object.entries(par.words))
-        for (let [l, symbol] of Object.entries(word.symbols))
-          // console.log(`symbol.text=${symbol.text}`);
-          console.log(`block[${i}].paragraphs[${j}].word[${k}].symbol[${l}].text=${symbol.text}`)
+        for (let [l, sym] of Object.entries(word.symbols))
+          console.log(`block[${i}].paragraphs[${j}].word[${k}].symbol[${l}].text=${sym.text}`)
 })();

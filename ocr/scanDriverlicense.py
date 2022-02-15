@@ -4,26 +4,40 @@ from dotenv import dotenv_values
 import json
 import os
 import io
-import utils
 import cv2
 import numpy as np
 import xml.etree.ElementTree as ET
 import datetime
 from dotmap import DotMap
+import ocr.utils as utils
+from ocr.logger import logging
 
-def main():
-  # Number of decimal places in template and detection result rectangle.
-  NDIGITS = 3
+def main(opts = dict()):
+  """Scan driver's license.
+  Args:
+    opts.input: Image path or Data URL.
+  Returns:
+    Return the text detected from the driver's license.
+  """
+  logging.debug('begin')
+
+  # Initialize options.
+  opts = dict(input = None) | opts
+  opts = DotMap(opts)
+  print(f'opts.input={opts.input[:50]}')
+
+  # Validate options.
+  validOptions(opts)
+
   # load an image.
-  imgPath = 'output/20220207114134.png'
-  # imgPath = 'output/_20220204192331_only_name.png'
-  # imgPath = 'output/_20220204192331.png'
-  # imgPath = 'img/license_only_name_template.png'
-  # imgPath = 'img/license_only_name_and_birthday.png'
-  img = cv2.imread(imgPath)
+  if utils.isDataURL(opts.input):
+    img = utils.toNdarray(opts.input)
+  else:
+    img = cv2.imread(opts.input)
 
   # Detect text from image.
-  texts = detectText(imgPath)
+  texts = detectText(img, utils.getMime(opts.input))
+  exit()
 
   # Could not find the text in the image.
   if not texts:
@@ -31,13 +45,13 @@ def main():
     return None
 
   # Find the rectangular point of the symbol from the result of document_text_detection.
-  syms = findSymbolRectangle(texts, img, NDIGITS)
+  syms = findSymbolRectangle(texts, img)
   print('Sorted syms:')
   for sym in syms:
     print('\t', *sym.vertices, f':{sym.text}')
 
   # Get annotations.
-  annots = loadAnnotation(NDIGITS)
+  annots = loadAnnotationXML()
   print('annots:')
   for annot in annots:
     print('\t', *annot.rect, f':{annot.name}')
@@ -55,11 +69,32 @@ def main():
   # Template Matching.
   output = templateMatch(annots, syms)
 
-def loadImgAnnotationClient():
-  """Load the image annotation client.
-  Returns:
-    Returns a google.cloud.vision.ImageAnnotatorClient instance.
+def validOptions(opts): 
+  """Validate options.
+  Args:
+    opts.input: Image path or Data URL.
+  Raises:
+    ValueError: If there are invalid options
   """
+  # input option required.
+  if not opts.input:
+    raise ValueError('input option required')
+
+  # Input options only allow image path or data URL.
+  if not utils.isDataURL(opts.input) and not os.path.exists(opts.input) and os.path.isfile(opts.input):
+    raise ValueError(f'{opts.input} Image file not found')
+
+def detectText(img, mime):
+  """Detect text from image.
+  Args:
+    img: CV2 Image object.
+  Returns
+    Returns text detection result.
+  """
+  print('>>>>>>>>>>>>>>>>mime=', mime)
+  exit()
+
+
   # Load .env.
   envPath = './.env';
   if not os.path.exists(envPath):
@@ -72,23 +107,10 @@ def loadImgAnnotationClient():
   creds = json.loads(config['GOOGLE_CREDS'])
   
   # Instantiates a client.
-  return vision.ImageAnnotatorClient(credentials = service_account.Credentials.from_service_account_info(creds))
+  client = vision.ImageAnnotatorClient(credentials = service_account.Credentials.from_service_account_info(creds))
 
-def detectText(imgPath):
-  """Detect text from image.
-  Args:
-    imgPath: Image path.
-  Returns
-    Returns text detection result.
-  """
-  # Load the image annotation client.
-  client = loadImgAnnotationClient()
-
-  # Loads the image into memory.
-  with io.open(imgPath, 'rb') as f:
-    content = f.read()
-
-  # OCR the image.
+  # Detect text.
+  content = cv2.imencode(f'.{mime}', img)[1].tostring()
   res = client.document_text_detection(image = vision.Image(content=content),
                                         image_context = vision.ImageContext(language_hints =['ja']))
 
@@ -128,7 +150,7 @@ def findSymbolRectangle(texts, img, ndigits = 3):
   # Sort the symbol rectangles from top left to bottom right.
   return sorted(syms, key=lambda sym: np.linalg.norm(np.array((sym.rect[0][0], sym.rect[0][1])) - np.array([0,0])))
 
-def loadAnnotation(ndigits = 3):
+def loadAnnotationXML(ndigits = 3):
   """Returns the rectangular point of the OCR field.
   Args:
     ndigits: Number of decimal places in the ratio of rectangular points.
@@ -199,7 +221,7 @@ def templateMatch(annots, syms, wd, ht):
 
       # When the area where the symbol rectangle and the annotation rectangle overlap is greater than or equal to the threshold value.
       if (overlapRatio) > .5:
-        output[an not.name].text += sym.text
+        output[annot.name].text += sym.text
         rect = output[annot.name].rect
         rect.xmin = min(rect.xmin, symRect[0])
         rect.ymin
@@ -209,6 +231,3 @@ def templateMatch(annots, syms, wd, ht):
   print('Output:')
   for outpu in output.items():
     print('\t', outpu)
-
-if __name__ == '__main__':
-  main()

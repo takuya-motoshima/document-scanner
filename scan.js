@@ -17,8 +17,8 @@ const opts = program.opts();
 const args = ['-i', opts.input, '-p'];
 if (opts.output)
   args.push('-o', opts.output);
-if (opts.aspectRatio)
-  args.push('-r', opts.aspectRatio);
+if (opts.aspect)
+  args.push('-r', opts.aspect);
 
 // Scan document.
 PythonShell.run('scan.py', {args}, (err, res) => {

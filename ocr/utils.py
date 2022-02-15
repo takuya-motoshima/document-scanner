@@ -5,16 +5,33 @@ import os.path
 import re
 from importlib import import_module
 import json
-# tkinter changed to read dynamically in show function.
-# import tkinter as tk
 import colorsys
 import random
+from urllib import request
+# tkinter changed to read dynamically in show function.
+# import tkinter as tk
+
+def toNdarray(str): 
+  """Image to Data URL.
+  Args:
+    img: Image Data URL or image base64.
+  Returns:
+    Return CV2 Image object.
+  """
+  if isDataURL(str):
+    # For Data URL.
+    with request.urlopen(str) as res:
+      data = res.read()
+    return cv2.imdecode(np.array(bytearray(data), dtype=np.uint8), cv2.IMREAD_UNCHANGED)
+  else:
+    # For base64.
+    return cv2.imdecode(np.fromstring(base64.b64decode(str), np.uint8),  cv2.IMREAD_UNCHANGED)
 
 def toDataURL(img, mime = None):
-  """Image to Data URL. Supports png, jpg and jpeg.
+  """Image to Data URL.
   Args:
-    img: Image path or CV2 ndarray image.
-    mime: The media type of the Data URL. Required if the image is an ndarray image.
+    img: CV2 Image object or image path.
+    mime: The media type of the Data URL. Required if the image is an CV2 Image object.
   Returns:
     Return Data URL and MIME type.
   Raises:
@@ -26,29 +43,39 @@ def toDataURL(img, mime = None):
   # Generates and returns a Data URL string based on base64.
   return f'data:image/{mime};base64,{b64}', mime
 
-def toBase64(img, mime = None):
-  """Image to base64. Supports png, jpg and jpeg.
+def isDataURL(str):
+  """Check if it is a Data URL.
   Args:
-    img: Image path or CV2 ndarray image.
-    mime: The media type of the Data URL. Required if the image is an ndarray image.
+    str: Character to check.
+  Returns:
+    Returns True if the string is a DataURL, False if not.
+  """
+  matches = re.match(r'^\s*data:(?:(\w+\/[\w\d\-+.]+)(?:;[\w-]+=[\w\d-]+)?)?(?:;base64)?,([\w\d!$&\',()*+;=\-._~:@\/?%\s]*)\s*$', str)
+  return True if matches else False
+
+def toBase64(img, mime = None):
+  """Image to base64. 
+  Args:
+    img: CV2 Image object or image path.
+    mime: The media type of the Data URL. Required if the image is an CV2 Image object.
   Returns:
     Return base64 and MIME type.
   Raises:
     ValueError: Image types other than png, jpg, jpeg.
   """
   if isinstance(img, np.ndarray):
-    # For ndarray images.
+    # For CV2 Image object.
     # Return an error if the required parameter MIME type is missing.
     if not mime:
       raise ValueError('Requires media type (png or jpeg)')
 
-    # ndarray image to base64.
+    # CV2 Image object to base64.
     _, encoded = cv2.imencode(f'.{mime}', img)
 
     # Return base64.
     return base64.b64encode(encoded).decode('ascii'), mime
   elif isinstance(img, str):
-    # For image paths.
+    # For image path.
     # Get MIME type.
     mime = getMime(img)
 
@@ -59,8 +86,8 @@ def toBase64(img, mime = None):
     # Bytes object to base64.
     return base64.b64encode(bytes).decode('ascii'), mime
   else:
-    # Return an error if the input is not an ndarray image or image path.
-    raise ValueError('Image parameters should be file paths or ndarray images')
+    # Return an error if the input is not an CV2 Image object or image path.
+    raise ValueError('Image parameters should be file path or CV2 Image object')
 
 def detectDataURL(str):
   """Detecting Data URL.
@@ -72,8 +99,7 @@ def detectDataURL(str):
   Returns:
     If the string is a DataURL, it returns the media type and base64. Otherwise returns None.
   """
-  matches = re.match(r'^\s*data:(?:(\w+\/[\w\d\-+.]+)(?:;[\w-]+=[\w\d-]+)?)?(?:;base64)?,([\w\d!$&\',()*+;=\-._~:@\/?%\s]*)\s*$', str)
-  # matches = re.match(r'^\s*data:(\w+\/\w+(?:;[\w\-]+\=[\w\-]+)?)?(?:;base64)?,([\w\d!$&\',()*+,;=\-._~:@\/?%\s]*)\s*$', str)
+  matches = re.match(r'^\s*data:(?:(?:\w+\/([\w\d\-+.]+))(?:;[\w-]+=[\w\d-]+)?)?(?:;base64)?,([\w\d!$&\',()*+;=\-._~:@\/?%\s]*)\s*$', str)
   if not matches:
     return None
   mime = matches.group(1)
@@ -93,23 +119,31 @@ def getExtension(path):
     return None
   return name[1].lower()
 
-def getMime(path):
-  """Return MIME type from file path.
+def getMime(str):
+  """Returns the MIME type (e.g. png, jpg).
   Args:
-    path: File Path.
+    str: Image Data URL or file path.
   Returns:
-    MIME type, e.g. png.
+    MIME type (e.g. png, jpg).
   """
-  # Get extension.
-  ext = getExtension(path)
-
-  # Return MIME type.
-  if ext == 'jpg' or ext == 'jpeg':
-    return 'jpeg'
-  elif ext=='png':
-    return 'png'
+  if isDataURL(str):
+    # For Data URL.
+    mime, _ = detectDataURL(str)
+    return mime
   else:
-    return ext
+    # For image path.
+    # Get extension.
+    ext = getExtension(str)
+    if not ext:
+      raise ValueError('Invalid file path')
+
+    # Return MIME type.
+    if ext == 'jpg' or ext == 'jpeg':
+      return 'jpeg'
+    elif ext=='png':
+      return 'png'
+    else:
+      return ext
 
 def writeJson(path, data):
   """Write the data to a file as JSON.
@@ -123,7 +157,7 @@ def writeJson(path, data):
 def drawRect(img, pt1, pt2, color, label, drawTextBackground = True):
   """Draw rectangle with text.
   Args:
-    img: ndarray type image.
+    img: CV2 Image object.
     pt1: The upper left point of the rectangle.
     pt2: The bottom right dot of the rectangle.
     color: Rectangle background color.
@@ -137,14 +171,14 @@ def drawRect(img, pt1, pt2, color, label, drawTextBackground = True):
   font = cv2.FONT_HERSHEY_SIMPLEX
   scale = .5
   thk = 1
-  (wd, ht), _ = cv2.getTextSize(label, font, scale, thk)
+  (width, height), _ = cv2.getTextSize(label, font, scale, thk)
   x, y = pt1
 
   # Text background.
   margin = 10
   labelColor = color
   if drawTextBackground:
-    cv2.rectangle(img, (x, y - ht - margin), (x + wd + margin, y), color, thickness=-1)
+    cv2.rectangle(img, (x, y - height - margin), (x + width + margin, y), color, thickness=-1)
     labelColor = (0, 0, 0)
 
   # Draw text.
@@ -189,11 +223,11 @@ def calcIoU(rectA, rectB):
   interYmin = max(aYmin, bYmin)
   interXmax = min(aXmax, bXmax)
   interYmax = min(aYmax, bYmax)
-  interWd = max(0, interXmax - interXmin)
-  # interWd = max(0, interXmax - interXmin + 1)# The reason for adding 1 is to avoid division by zero.
-  interHt = max(0, interYmax - interYmin)
-  # interHt = max(0, interYmax - interYmin + 1)# The reason for adding 1 is to avoid division by zero.
-  interArea = interWd * interHt
+  interWidth = max(0, interXmax - interXmin)
+  # interWidth = max(0, interXmax - interXmin + 1)# The reason for adding 1 is to avoid division by zero.
+  interHeight = max(0, interYmax - interYmin)
+  # interHeight = max(0, interYmax - interYmin + 1)# The reason for adding 1 is to avoid division by zero.
+  interArea = interWidth * interHeight
 
   # Calculate the area of union.
   unionArea = aArea + bArea - interArea
@@ -233,30 +267,60 @@ def calcGIoU(rectA, rectB):
   giou = iou - (cArea - unionArea) / cArea
   return round(giou, 3), interArea, aArea, bArea
 
+def resizeImage(img, width=None, height=None, intrpl = cv2.INTER_AREA):
+  """Resize the image.
+  Args:
+    img: CV2 Image object.
+    width: Width after resizing.
+    height: Height after resizing.
+    intrpl: Interpolation flag that takes one of the following methods.
+            cv2.INTER_NEAREST: nearest neighbor interpolation.
+            cv2.INTER_LINEAR: bilinear interpolation.
+            cv2.INTER_CUBIC: bicubic interpolation.
+            cv2.INTER_AREA: resampling using pixel area relation. It may be a preferred method for image decimation, as it gives moire'-free results. But when the image is zoomed, it is similar to the INTER_NEAREST method.
+            cv2.INTER_LANCZOS4: Lanczos interpolation over 8x8 neighborhood.
+  Returns:
+    Return a resized CV2 Image object.
+  """
+  resizeRatio = 1
+  origWidth, origHeight, _ = img.shape
+  if width is None and height is None:
+    return img, resizeRatio
+  elif width is None:
+    resizeRatio = height / origHeight
+    width = int(origWidth * resizeRatio)
+    resizedImg = cv2.resize(img, (height, width), intrpl)
+    return resizedImg, resizeRatio
+  else:
+    resizeRatio = width / origWidth
+    height = int(origHeight * resizeRatio)
+    resizedImg = cv2.resize(img, (height, width), intrpl)
+    return resizedImg, resizeRatio
+
 def show(title, img):
-# def show(title, img, scaleWd = 500):
+# def show(title, img, scaleWidth = 500):
   """Show image on display.
   Args:
     title: Display title.
-    img: ndarray type image.
+    img: CV2 Image object.
   """
-  ht, wd = img.shape[:2]
+  height, width = img.shape[:2]
   tk = import_module('tkinter')
   root = tk.Tk()
-  screenWd = root.winfo_screenwidth()
-  screenHt = root.winfo_screenheight()
+  screenWidth = root.winfo_screenwidth()
+  screenHeight = root.winfo_screenheight()
   root.destroy()
   multiplier = 1
-  if ht > screenHt or wd > screenWd:
-    if ht / screenHt >= wd / screenWd:
-      multiplier = screenHt / ht
+  if height > screenHeight or width > screenWidth:
+    if height / screenHeight >= width / screenWidth:
+      multiplier = screenHeight / height
     else:
-      multiplier = screenWd / wd
+      multiplier = screenWidth / width
   dst = cv2.resize(img, (0, 0), fx=multiplier, fy=multiplier)
-  # scaleHt = round(ht * (scaleWd / wd))
-  # dst = cv2.resize(img, dsize=(scaleWd, scaleHt))
-  x = round(screenWd / 2 - (wd * multiplier) / 2)
-  y = round(screenHt / 2 - (ht * multiplier) / 2)
+  # scaleHeight = round(height * (scaleWidth / width))
+  # dst = cv2.resize(img, dsize=(scaleWidth, scaleHeight))
+  x = round(screenWidth / 2 - (width * multiplier) / 2)
+  y = round(screenHeight / 2 - (height * multiplier) / 2)
   cv2.namedWindow(title) 
   cv2.moveWindow(title, x, y)
   cv2.imshow(title, dst)
@@ -264,3 +328,7 @@ def show(title, img):
 
   # Destroy the window.
   cv2.destroyAllWindows()
+
+# def initLogger():
+#   """Initialize the logger.
+#   """

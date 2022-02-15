@@ -14,6 +14,7 @@ from dotmap import DotMap
 def main():
   # Number of decimal places in template and detection result rectangle.
   NDIGITS = 3
+
   # load an image.
   imgPath = 'output/20220207114134.png'
   # imgPath = 'output/_20220204192331_only_name.png'

@@ -9,9 +9,9 @@ const fs = require('fs');
  * @throws  {commander.InvalidArgumentError} Invalid value.
  */
 exports.validateImg = (val) => {
-  const found = val.match(/^\s*data:(?:(\w+\/[\w\d\-+.]+)(?:;[\w-]+=[\w\d-]+)?)?(?:;base64)?,([\w\d!$&\',()*+;=\-._~:@\/?%\s]*)\s*$/);
-  if (found) {
-    const mime = found[1];
+  const matches = val.match(/^\s*data:(?:(\w+\/[\w\d\-+.]+)(?:;[\w-]+=[\w\d-]+)?)?(?:;base64)?,([\w\d!$&\',()*+;=\-._~:@\/?%\s]*)\s*$/);
+  if (matches) {
+    const mime = matches[1];
     if (mime !== 'image/png' && mime !== 'image/jpeg')
       throw new commander.InvalidArgumentError('Unsupported media type, Images can process PNG or JPG');
   } else {
@@ -31,10 +31,10 @@ exports.validateImg = (val) => {
  * @throws  {commander.InvalidArgumentError} Invalid value.
  */
 exports.validateAspectRatio = (val) => {
-  const found = val.match(/^((?!0\d)\d*(?:\.\d+)?):((?!0\d)\d*(?:\.\d+)?)$/);
-  if (!found)
+  const matches = val.match(/^((?!0\d)\d*(?:\.\d+)?):((?!0\d)\d*(?:\.\d+)?)$/);
+  if (!matches)
     throw new commander.InvalidArgumentError('Invalid format, typing as a width:height ratio (like 4:5 or 1.618:1)');
-  const [_, wdRatio, htRatio] = found;
+  const [_, wdRatio, htRatio] = matches;
   if (parseFloat(wdRatio) === 0 || parseFloat(htRatio) === 0)
     throw new commander.InvalidArgumentError('Zero cannot be used for height or width ratio');
   return val;
