@@ -26,8 +26,9 @@ def main():
     logging.debug('The text could not be detected')
     exit()
   
-  for key, val in matches.items():
-    print(f'{key} -> {val.text}')
+  for key, match in matches.items():
+    print(f'{key} -> {match.text}')
+    logging.debug(f'{key} -> {match.text}')
 
 if __name__ == '__main__':
   main()  

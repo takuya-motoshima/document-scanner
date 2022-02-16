@@ -49,19 +49,15 @@ def main(opts = dict()):
   annots = loadAnnotationXML()
   # logging.debug(f'annots={annots}')
 
-  # Draw annotation rectangle.
-  height, width, _ = img.shape
-  for annot in annots:
-    pt1, _, pt2, _ = annot.rect
-    cv2.rectangle(img,
-      [round(pt1[0] * width), round(pt1[1] * height)],
-      [round(pt2[0] * width), round(pt2[1] * height)],
-      (0,0,255), 2)
-  utils.show('symbol', img)
+  # Show annotation rectangle for debugging.
+  showAnnotationRectangle(img, annots)
 
   # Find text that inscribes matches the field template rectangle.
   matches = matching(annots, syms)
-  # logging.debug(f'matches={matches}')
+
+  # Show detected text rectangles for debugging.
+  showDetectedTextRectangle(img, matches)
+
   return matches
 
 def validOptions(opts): 
@@ -187,18 +183,29 @@ def matching(annots, syms):
   # Initialize the return value. (Key is field name, value is rectangular point and text).
   matches = dict.fromkeys([annot.get('name') for annot in annots], None)
   for name in matches:
-    matches[name] = DotMap(dict(text = '', rect = dict(xmin = .0, ymin = .0, xmax = .0, ymax = .0)))
+    matches[name] = DotMap(dict(
+      text = '',
+      rect = dict(xmin = None, ymin = None, xmax = None, ymax = None)
+    ))
 
   # Read the field coordinates of the template.
   for annot in annots:
     # Template field rectangle.
-    annotRect = (annot.rect[0][0], annot.rect[0][1], annot.rect[2][0], annot.rect[2][1])
+    annotXmin = annot.rect[0][0]
+    annotYmin = annot.rect[0][1]
+    annotXmax = annot.rect[2][0]
+    annotYmax = annot.rect[2][1]
     for sym in syms:
       # Detected text symbol rectangle.
-      symRect = (sym.rect[0][0], sym.rect[0][1], sym.rect[2][0], sym.rect[2][1])
+      symXmin = sym.rect[0][0]
+      symYmin = sym.rect[0][1]
+      symXmax = sym.rect[2][0]
+      symYmax = sym.rect[2][1]
 
       # Skip if template and symbol do not intersect.
-      iou, interArea, _, symArea = utils.calcIoU(annotRect, symRect)
+      iou, interArea, _, symArea = utils.calcIoU(
+        (annotXmin, annotYmin, annotXmax, annotYmax),
+        (symXmin, symYmin, symXmax, symYmax))
       if iou == 0:
         continue
 
@@ -209,4 +216,39 @@ def matching(annots, syms):
       # If the template field and the detection text are inscribed, get that text.
       if ratio > .5:
         matches[annot.name].text += sym.text
+        matches[annot.name].rect.xmin = symXmin if matches[annot.name].rect.xmin is None or symXmin < matches[annot.name].rect.xmin else matches[annot.name].rect.xmin
+        matches[annot.name].rect.ymin = symYmin if matches[annot.name].rect.ymin is None or symYmin < matches[annot.name].rect.ymin else matches[annot.name].rect.ymin
+        matches[annot.name].rect.xmax = symXmax if matches[annot.name].rect.xmax is None or symXmax > matches[annot.name].rect.xmax else matches[annot.name].rect.xmax
+        matches[annot.name].rect.ymax = symYmax if matches[annot.name].rect.ymax is None or symYmax > matches[annot.name].rect.ymax else matches[annot.name].rect.ymax
   return matches
+
+def showAnnotationRectangle(img, annots):
+  """Show annotation rectangle.
+  Args:
+    img: CV2 Image object.
+    annots: Template annotation.
+  """
+  tmpImg = img.copy()
+  height, width, _ = tmpImg.shape
+  for annot in annots:
+    pt1, _, pt2, _ = annot.rect
+    cv2.rectangle(tmpImg,
+      [round(pt1[0] * width), round(pt1[1] * height)],
+      [round(pt2[0] * width), round(pt2[1] * height)],
+      (0,0,255), 2)
+  utils.show('Annotation rectangle', tmpImg)
+
+def showDetectedTextRectangle(img, matches):
+  """Show detected text rectangle.
+  Args:
+    img: CV2 Image object.
+    matches: Detected text rectangle.
+  """
+  tmpImg = img.copy()
+  height, width, _ = tmpImg.shape
+  for key, match in matches.items():
+    cv2.rectangle(tmpImg,
+      [round(match.rect.xmin * width), round(match.rect.ymin * height)],
+      [round(match.rect.xmax * width), round(match.rect.ymax * height)],
+      (0,0,255), 2)
+  utils.show('Detected text rectangle', tmpImg)
