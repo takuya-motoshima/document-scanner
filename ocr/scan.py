@@ -273,6 +273,8 @@ def showDetectedTextRectangle(img, matches):
   tmpImg = img.copy()
   height, width, _ = tmpImg.shape
   for key, match in matches.items():
+    if not match.text:
+      continue
     cv2.rectangle(tmpImg,
       [round(match.rect.xmin * width), round(match.rect.ymin * height)],
       [round(match.rect.xmax * width), round(match.rect.ymax * height)],
