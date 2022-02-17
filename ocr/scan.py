@@ -236,7 +236,7 @@ def showAnnotationRectangle(img, annots):
       [round(pt1[0] * width), round(pt1[1] * height)],
       [round(pt2[0] * width), round(pt2[1] * height)],
       (0,0,255), 2)
-  utils.show('Annotation rectangle', tmpImg)
+  # utils.show('Annotation rectangle', tmpImg)
 
 def showDetectedTextRectangle(img, matches):
   """Show detected text rectangle.

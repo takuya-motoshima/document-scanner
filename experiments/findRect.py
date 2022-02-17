@@ -1,7 +1,7 @@
 import cv2
 
 def main():
-  img = cv2.imread('../img/edge.jpg')
+  img = cv2.imread('../img/edge.png')
   grayImg = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
   _, binImg = cv2.threshold(grayImg, 20, 255, cv2.THRESH_BINARY)
   cnts, _ = cv2.findContours(binImg, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
