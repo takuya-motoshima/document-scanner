@@ -11,6 +11,7 @@ pip3 install google-cloud-vision
 pip3 install python-dotenv
 pip3 install dotmap
 ```
+
 ## Usage
 
 ### Python
