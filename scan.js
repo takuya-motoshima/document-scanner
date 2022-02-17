@@ -26,29 +26,29 @@ function validateImg(val) {
   return val;
 }
 
-/**
- * Aspect ratio option validation.
- *
- * @param   {string} Argument value.
- * @returns Return the original value if there are no errors.
- * @throws  {commander.InvalidArgumentError} Invalid value.
- */
-function validateAspectRatio(val) {
-  const matches = val.match(/^((?!0\d)\d*(?:\.\d+)?):((?!0\d)\d*(?:\.\d+)?)$/);
-  if (!matches)
-    throw new commander.InvalidArgumentError('Invalid format, typing as a width:height ratio (like 4:5 or 1.618:1)');
-  const [_, wdRatio, htRatio] = matches;
-  if (parseFloat(wdRatio) === 0 || parseFloat(htRatio) === 0)
-    throw new commander.InvalidArgumentError('Zero cannot be used for height or width ratio');
-  return val;
-}
+// /**
+//  * Aspect ratio option validation.
+//  *
+//  * @param   {string} Argument value.
+//  * @returns Return the original value if there are no errors.
+//  * @throws  {commander.InvalidArgumentError} Invalid value.
+//  */
+// function validateAspectRatio(val) {
+//   const matches = val.match(/^((?!0\d)\d*(?:\.\d+)?):((?!0\d)\d*(?:\.\d+)?)$/);
+//   if (!matches)
+//     throw new commander.InvalidArgumentError('Invalid format, typing as a width:height ratio (like 4:5 or 1.618:1)');
+//   const [_, wdRatio, htRatio] = matches;
+//   if (parseFloat(wdRatio) === 0 || parseFloat(htRatio) === 0)
+//     throw new commander.InvalidArgumentError('Zero cannot be used for height or width ratio');
+//   return val;
+// }
 
 // Parse arguments.
 program
   .description('Scan document from image')
   .requiredOption('-i, --input <string>', 'Image path or Data URL', validateImg)
   .option('-o, --output <string>', 'Output image path of the found document')
-  .option('-r, --aspect <string>', 'Resize the scanned document to the specified aspect ratio. Typing as a width:height ratio (like 4:5 or 1.618:1).', validateAspectRatio)
+  // .option('-r, --aspect <string>', 'Resize the scanned document to the specified aspect ratio. Typing as a width:height ratio (like 4:5 or 1.618:1).', validateAspectRatio)
   .parse();
 const opts = program.opts();
 
@@ -56,8 +56,8 @@ const opts = program.opts();
 const args = ['-i', opts.input, '-p'];
 if (opts.output)
   args.push('-o', opts.output);
-if (opts.aspect)
-  args.push('-r', opts.aspect);
+// if (opts.aspect)
+//   args.push('-r', opts.aspect);
 
 // Scan document.
 PythonShell.run('scan.py', {args}, (err, res) => {
