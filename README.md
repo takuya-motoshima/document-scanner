@@ -2,45 +2,43 @@
 Detect documents from images.
 
 ## Getting Started
-sInstalling OpenCV for Python3
+Install dependent packages.
 ```sh
 pip3 install opencv-python
 pip3 install opencv-contrib-python
 pip3 install matplotlib
+pip3 install google-cloud-vision
+pip3 install python-dotenv
+pip3 install dotmap
 ```
-## Usage
 
-### Python
+## Usage
 Use scan.py to scan the document in Python.
 
 scan.py help.
 ```sh
 python scan.py --help
-# usage: scan.py [-h] -i IMAGE [-r ASPECTRATIO]
+# usage: scan.py [-h] -i INPUT [-o OUTPUT] [-p] -t {driverslicense,mynumber}
 # 
-# options:
+# optional arguments:
 #   -h, --help            show this help message and exit
-#   -i IMAGE, --input IMAGE
-#                         increase output verbosity
-#   -r ASPECTRATIO, --aspect ASPECTRATIO
-#                         Resize the scanned document to the specified aspect
-#                         ratio. Typing as a width:height ratio (like 4:5 or
-#                         1.618:1).
+#   -i INPUT, --input INPUT
+#                         Image path or Data URL
+#   -o OUTPUT, --output OUTPUT
+#                         Output image path of the found document
+#   -p, --print-data-url  Print the Dat URL of the document
+#   -t {driverslicense,mynumber}, --type {driverslicense,mynumber}
+#                         OCR document type
 ```
 
-Find the document.
+Scan Japanese driver's license card.
 ```sh
-python scan.py -i img/license.png
+python scan.py -i img/license.png -t driverslicense
 ```
 
-Resize document to size Japanese driver's license.
+Scan Japanese My Number Card.
 ```sh
-python scan.py -i img/license.png -r 8.56:5.4
-```
-
-Find a document from an image Data URL.
-```sh
-python scan.py -r 8.56:5.4 -i "data:image/png;base64,iVB..."
+python scan.py -i img/mynumber.png -t mynumber
 ```
 
 ## Unit test
@@ -56,8 +54,14 @@ python -m unittest discover -v tests
 # OK
 ```
 
-## Author
+## Others
+**Driver's license card size:**  
+ID-1 format. 85.60 x 53.98 mm.
 
+**My number card size:**  
+ID-1 format. 85.60 x 53.98 mm.
+
+## Author
 **Takuya Motoshima**
 
 * [github/takuya-motoshima](https://github.com/takuya-motoshima)
