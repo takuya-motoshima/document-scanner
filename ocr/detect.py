@@ -5,25 +5,27 @@ import re
 import re
 from dotmap import DotMap
 import ocr.utils as utils
-from ocr.logger import logging
+# from ocr.logger import logging
 
 def main(opts = dict()):
   """Detect document from image.
   Args:
     opts.input: Image path or Data URL.
     opts.output: Output image path of the found document.
-    opts.input: Resize the scanned document to the specified aspect ratio. Typing as a width:height ratio (like 4:5 or 1.618:1).
+    opts.aspect: Resize the scanned document to the specified aspect ratio. Typing as a width:height ratio (like 4:5 or 1.618:1).
   Returns:
     Return detected document image.
   """
-  logging.debug('begin')
-
   # Initialize options.
-  opts = dict(input = None, output = None, aspect = None) | opts
+  opts = dict(
+    input = None,
+    output = None,
+    aspect = None) | opts
   opts = DotMap(opts)
-  logging.debug(f'opts.input={opts.input[:50]}')
-  logging.debug(f'opts.output={opts.output}')
-  logging.debug(f'opts.aspect={opts.aspect}')
+
+  print(f'opts.input={opts.input[:50]}')
+  print(f'opts.output={opts.output}')
+  print(f'opts.aspect={opts.aspect}')
 
   # Validate options.
   validOptions(opts)
@@ -46,7 +48,7 @@ def main(opts = dict()):
 
   # Rectangle contour not found.
   if maxCnt is None:
-    logging.debug('Rectangle contour not found')
+    print('Rectangle contour not found')
     return None
 
   # Draw a contour.
@@ -64,19 +66,20 @@ def main(opts = dict()):
     widthRatio, heightRatio = list(map(float, opts.aspect.split(':')))
     resizeWidth = width
     resizeHeight = height
+
     # Resize so that the width and height after resizing are not smaller than before resizing.
     if (height / width) < (heightRatio / widthRatio):
       resizeHeight = round(width * (heightRatio / widthRatio))
     else:
       resizeWidth = round(height / (heightRatio / widthRatio))
-    logging.debug(f'resize={resizeWidth}/{resizeHeight}')
+    print(f'resize={resizeWidth}/{resizeHeight}')
     warpImg = cv2.resize(warpImg, (resizeWidth, resizeHeight), cv2.INTER_AREA)
     utils.show(f'resize to {widthRatio}:{heightRatio} ratio', warpImg)
 
   # Write the image to a file if you have the output option.
   if opts.output:
     cv2.imwrite(opts.output, warpImg)
-    logging.debug(f'Output {opts.output}')
+    print(f'Output {opts.output}')
 
   # Print the image Data URL if you have a print option.
   dataURL, _ = utils.toDataURL(warpImg, utils.getMime(opts.input))
@@ -89,7 +92,7 @@ def validOptions(opts):
   Args:
     opts.input: Image path or Data URL.
     opts.output: Output image path of the found document.
-    opts.input: Resize the scanned document to the specified aspect ratio. Typing as a width:height ratio (like 4:5 or 1.618:1).
+    opts.aspect: Resize the scanned document to the specified aspect ratio. Typing as a width:height ratio (like 4:5 or 1.618:1).
   Raises:
     ValueError: If there are invalid options
   """
@@ -110,7 +113,7 @@ def validOptions(opts):
     htRatio = matches.group(2)
     if float(widthRatio) == 0 or float(htRatio) == 0:
       raise ValueError('ZERO cannot be used for aspect ratio width and height')
-
+  
 def findRectangleContour(img):
   """Find the contour of the rectangle with the largest area.
   Args:
@@ -133,7 +136,6 @@ def findRectangleContour(img):
 
   # Find the contour.
   cnts, _ = cv2.findContours(edgedImg, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
-  logging.debug(f'length of countours {len(cnts)}')
 
   # If you can't find the contour.
   if not cnts:
@@ -179,7 +181,6 @@ def convertContourToRect(cnt):
   rect[3] = pts[np.argmax(diff)] # bottom-left
 
   # Return the rectangle coordinates of the contour.
-  # logging.debug(f'rect={rect}')
   return rect
 
 def fourPointTransform(cnt, origImg):

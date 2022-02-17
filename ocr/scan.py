@@ -9,21 +9,26 @@ import xml.etree.ElementTree as ET
 import datetime
 from dotmap import DotMap
 import ocr.utils as utils
-from ocr.logger import logging
+# from ocr.logger import logging
 
 def main(opts = dict()):
   """Scan document.
   Args:
     opts.input: Image path or Data URL.
+    opts.type: Document type.
+                'driverslicense': Driver's license card
+                'mynumber': My number card
   Returns:
     Return the text detected from the document.
   """
-  logging.debug('begin')
-
   # Initialize options.
-  opts = dict(input = None) | opts
+  opts = dict(
+    input = None,
+    type = None
+  ) | opts
   opts = DotMap(opts)
-  logging.debug(f'opts.input={opts.input[:50]}')
+  print(f'opts.input={opts.input[:50]}')
+  print(f'opts.type={opts.type}')
 
   # Validate options.
   validOptions(opts)
@@ -38,16 +43,14 @@ def main(opts = dict()):
   texts = detectText(img, utils.getMime(opts.input))
   if not texts:
     # Could not find the text in the image.
-    logging.debug('Text not found in image')
+    print('Text not found in image')
     return None
 
   # Find the rectangular point of the symbol from the result of document_text_detection.
   syms = findRectangleSymbol(texts, img)
-  # logging.debug(f'syms={syms}')
 
   # Get annotations.
-  annots = loadAnnotationXML()
-  # logging.debug(f'annots={annots}')
+  annots = loadAnnotationXML(opts.type)
 
   # Show annotation rectangle for debugging.
   showAnnotationRectangle(img, annots)
@@ -64,6 +67,9 @@ def validOptions(opts):
   """Validate options.
   Args:
     opts.input: Image path or Data URL.
+    opts.type: Document type.
+                'driverslicense': Driver's license card
+                'mynumber': My number card
   Raises:
     ValueError: If there are invalid options
   """
@@ -74,6 +80,14 @@ def validOptions(opts):
   # Input options only allow image path or data URL.
   if not utils.isDataURL(opts.input) and not os.path.exists(opts.input) and os.path.isfile(opts.input):
     raise ValueError(f'{opts.input} Image file not found')
+
+  # Document type required.
+  if not opts.type:
+    raise ValueError('type option required')
+  
+  # Check if the document type is valid.
+  if opts.type != 'driverslicense' and opts.type != 'mynumber':
+    raise ValueError('Invalid type. Use \'driverslicense\' or \'mynumber\'')
 
 def detectText(img, mime):
   """Detect text from image.
@@ -138,16 +152,26 @@ def findRectangleSymbol(texts, img, ndigits = 3):
   # Sort the symbol rectangles from top left to bottom right.
   return sorted(syms, key=lambda sym: np.linalg.norm(np.array((sym.rect[0][0], sym.rect[0][1])) - np.array([0,0])))
 
-def loadAnnotationXML(ndigits = 3):
+def loadAnnotationXML(type, ndigits = 3):
   """Returns the rectangular point of the OCR field.
   Args:
+    type: Document type.
+          'driverslicense': Driver's license card
+          'mynumber': My number card
     ndigits: Number of decimal places in the ratio of rectangular points.
   Returns:
     Returns a list where the key is the field name and the value is a rectangular point.
     The points of the rectangle are in the order of upper left, upper right, lower right, lower left.
   """
+  # Annotation XML to load.
+  if type == 'driverslicense':
+    xmlPath = './ocr/annotations/driverslicense.xml'
+  elif type == 'mynumber':
+    xmlPath = './ocr/annotations/mynumber.xml'
+  print(f'Load {xmlPath}')
+
   # Parse XML.
-  tree = ET.parse('./ocr/annotations/driverslicense.xml')
+  tree = ET.parse(xmlPath)
   root = tree.getroot()
 
   # Overall width and height of the image.
@@ -211,7 +235,9 @@ def matching(annots, syms):
 
       # Calculate the overlap between the template field and the detected text symbol.
       ratio = round(interArea / symArea, 3)
-      logging.debug(f'{annot.name} -> {sym.text} (iou={iou}, ratio={ratio})')
+
+      # # Debug template fields and detected text.
+      # print(f'{annot.name} -> {sym.text} (iou={iou}, ratio={ratio})')
 
       # If the template field and the detection text are inscribed, get that text.
       if ratio > .5:
