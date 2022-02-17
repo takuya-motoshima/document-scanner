@@ -31,4 +31,4 @@ def main():
     logging.debug(f'{key} -> {match.text}')
 
 if __name__ == '__main__':
-  main()  
+  main()
