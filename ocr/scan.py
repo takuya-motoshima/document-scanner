@@ -147,7 +147,7 @@ def loadAnnotationXML(ndigits = 3):
     The points of the rectangle are in the order of upper left, upper right, lower right, lower left.
   """
   # Parse XML.
-  tree = ET.parse('./ocr/annotations/license.xml')
+  tree = ET.parse('./ocr/annotations/driverslicense.xml')
   root = tree.getroot()
 
   # Overall width and height of the image.

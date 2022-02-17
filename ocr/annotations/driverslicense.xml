@@ -1,13 +1,13 @@
 <annotation>
 	<folder>annotations</folder>
-	<filename>license.jpg</filename>
-	<path>C:\Users\motoshima.takuya\proj\document-scanner\ocr\annotations\license.jpg</path>
+	<filename>driverslicense.png</filename>
+	<path>C:\Users\motoshima.takuya\proj\document-scanner\ocr\annotations\driverslicense.png</path>
 	<source>
 		<database>Unknown</database>
 	</source>
 	<size>
-		<width>681</width>
-		<height>432</height>
+		<width>674</width>
+		<height>425</height>
 		<depth>3</depth>
 	</size>
 	<segmented>0</segmented>
@@ -17,10 +17,10 @@
 		<truncated>0</truncated>
 		<difficult>0</difficult>
 		<bndbox>
-			<xmin>79</xmin>
-			<ymin>27</ymin>
-			<xmax>425</xmax>
-			<ymax>58</ymax>
+			<xmin>77</xmin>
+			<ymin>23</ymin>
+			<xmax>426</xmax>
+			<ymax>56</ymax>
 		</bndbox>
 	</object>
 	<object>
@@ -29,10 +29,10 @@
 		<truncated>0</truncated>
 		<difficult>0</difficult>
 		<bndbox>
-			<xmin>427</xmin>
-			<ymin>28</ymin>
-			<xmax>637</xmax>
-			<ymax>57</ymax>
+			<xmin>424</xmin>
+			<ymin>24</ymin>
+			<xmax>649</xmax>
+			<ymax>56</ymax>
 		</bndbox>
 	</object>
 	<object>
@@ -41,10 +41,10 @@
 		<truncated>0</truncated>
 		<difficult>0</difficult>
 		<bndbox>
-			<xmin>79</xmin>
-			<ymin>91</ymin>
-			<xmax>643</xmax>
-			<ymax>122</ymax>
+			<xmin>76</xmin>
+			<ymin>88</ymin>
+			<xmax>645</xmax>
+			<ymax>118</ymax>
 		</bndbox>
 	</object>
 	<object>
@@ -54,9 +54,9 @@
 		<difficult>0</difficult>
 		<bndbox>
 			<xmin>27</xmin>
-			<ymin>149</ymin>
-			<xmax>428</xmax>
-			<ymax>190</ymax>
+			<ymin>148</ymin>
+			<xmax>423</xmax>
+			<ymax>185</ymax>
 		</bndbox>
 	</object>
 	<object>
@@ -65,10 +65,10 @@
 		<truncated>0</truncated>
 		<difficult>0</difficult>
 		<bndbox>
-			<xmin>97</xmin>
-			<ymin>289</ymin>
-			<xmax>373</xmax>
-			<ymax>329</ymax>
+			<xmin>98</xmin>
+			<ymin>282</ymin>
+			<xmax>368</xmax>
+			<ymax>321</ymax>
 		</bndbox>
 	</object>
 </annotation>

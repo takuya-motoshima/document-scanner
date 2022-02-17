@@ -13,8 +13,6 @@ pip3 install dotmap
 ```
 
 ## Usage
-
-### Python
 Use scan.py to scan the document in Python.
 
 scan.py help.
@@ -59,6 +57,13 @@ python -m unittest discover -v tests
 # 
 # OK
 ```
+
+## Others
+**Driver's license card size:**  
+ID-1 format. 85.60 x 53.98 mm.
+
+**My number card size:**  
+ID-1 format. 85.60 x 53.98 mm.
 
 ## Author
 **Takuya Motoshima**
