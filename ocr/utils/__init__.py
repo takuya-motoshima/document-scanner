@@ -3,6 +3,7 @@ from .calcIoU import *
 from .detectDataURL import *
 from .getExtension import *
 from .getMime import *
+from .getNow import *
 from .isDataURL import *
 from .resizeImage import *
 from .show import *
