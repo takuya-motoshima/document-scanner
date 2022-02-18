@@ -9,7 +9,7 @@ import xml.etree.ElementTree as ET
 import datetime
 from dotmap import DotMap
 import ocr.utils as utils
-# from ocr.logger import logging
+from ocr.logger import logging
 
 def scan(opts = dict()):
   """Scan document.
@@ -27,8 +27,8 @@ def scan(opts = dict()):
     type = None
   ) | opts
   opts = DotMap(opts)
-  print(f'opts.input={opts.input[:50]}')
-  print(f'opts.type={opts.type}')
+  logging.debug(f'opts.input={opts.input[:50]}')
+  logging.debug(f'opts.type={opts.type}')
 
   # Validate options.
   _validOptions(opts)
@@ -43,7 +43,7 @@ def scan(opts = dict()):
   texts = _detectText(img, utils.getMime(opts.input))
   if not texts:
     # Could not find the text in the image.
-    print('Text not found in image')
+    logging.debug('Text not found in image')
     return None
 
   # Find the rectangular point of the symbol from the result of document_text_detection.
@@ -167,7 +167,7 @@ def _loadAnnotationXML(type, ndigits = 3):
     xmlPath = './ocr/annotations/driverslicense.xml'
   elif type == 'mynumber':
     xmlPath = './ocr/annotations/mynumber.xml'
-  print(f'Load {xmlPath}')
+  logging.debug(f'Load {xmlPath}')
 
   # Parse XML.
   tree = ET.parse(xmlPath)
@@ -236,7 +236,7 @@ def _matching(annots, syms):
       ratio = round(interArea / symArea, 3)
 
       # # Debug template fields and detected text.
-      # print(f'{annot.name} -> {sym.text} (iou={iou}, ratio={ratio})')
+      # logging.debug(f'{annot.name} -> {sym.text} (iou={iou}, ratio={ratio})')
 
       # If the template field and the detection text are inscribed, get that text.
       if ratio > .5:

@@ -5,7 +5,7 @@ import re
 import re
 from dotmap import DotMap
 import ocr.utils as utils
-# from ocr.logger import logging
+from ocr.logger import logging
 
 def detect(opts = dict()):
   """Detect document from image.
@@ -23,9 +23,9 @@ def detect(opts = dict()):
     aspect = None) | opts
   opts = DotMap(opts)
 
-  print(f'opts.input={opts.input[:50]}')
-  print(f'opts.output={opts.output}')
-  print(f'opts.aspect={opts.aspect}')
+  logging.debug(f'opts.input={opts.input[:50]}')
+  logging.debug(f'opts.output={opts.output}')
+  logging.debug(f'opts.aspect={opts.aspect}')
 
   # Validate options.
   _validOptions(opts)
@@ -48,7 +48,7 @@ def detect(opts = dict()):
 
   # Rectangle contour not found.
   if maxCnt is None:
-    print('Rectangle contour not found')
+    logging.debug('Rectangle contour not found')
     return None
 
   # Draw a contour.
@@ -72,14 +72,14 @@ def detect(opts = dict()):
       resizeHeight = round(width * (heightRatio / widthRatio))
     else:
       resizeWidth = round(height / (heightRatio / widthRatio))
-    print(f'resize={resizeWidth}/{resizeHeight}')
+    logging.debug(f'resize={resizeWidth}/{resizeHeight}')
     warpImg = cv2.resize(warpImg, (resizeWidth, resizeHeight), cv2.INTER_AREA)
     utils.show(f'resize to {widthRatio}:{heightRatio} ratio', warpImg)
 
   # Write the image to a file if you have the output option.
   if opts.output:
     cv2.imwrite(opts.output, warpImg)
-    print(f'Output {opts.output}')
+    logging.debug(f'Output {opts.output}')
 
   # Print the image Data URL if you have a print option.
   dataURL, _ = utils.toDataURL(warpImg, utils.getMime(opts.input))

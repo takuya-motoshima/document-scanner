@@ -1,7 +1,6 @@
 import argparse
 import ocr
-# from ocr.logger import logging
-# from pprint import pprint
+from ocr.logger import logging
 
 def main():
   # Parse arguments.
@@ -22,9 +21,9 @@ def main():
     output = opts['output'],
     aspect = aspect))
 
-  print(f'dataURL={dataURL[:50]}')
+  logging.debug(f'dataURL={dataURL[:50]}')
   if not dataURL:
-    print('The document could not be detected from the image')
+    logging.debug('The document could not be detected from the image')
     exit()
 
   # OCR.
@@ -33,11 +32,11 @@ def main():
     type = opts['type']))
 
   if not matches:
-    print('The text could not be detected')
+    logging.debug('The text could not be detected')
     exit()
   
   for key, match in matches.items():
-    print(f'{key} -> {match.text}')
+    logging.debug(f'{key} -> {match.text}')
 
 if __name__ == '__main__':
   main()
