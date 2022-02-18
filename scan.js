@@ -3,6 +3,7 @@ const {program} = require('commander');
 const commander = require('commander');
 const fs = require('fs');
 const moment = require('moment');
+const { exit } = require('process');
 
 /**
  * Image option validation.
@@ -43,21 +44,41 @@ function validateImg(val) {
 //   return val;
 // }
 
+/**
+ * Type option validation.
+ *
+ * @param   {string} Argument value.
+ * @returns Return the original value if there are no errors.
+ * @throws  {commander.InvalidArgumentError} Invalid value.
+ */
+function validateType(val) {
+  if (!['driverslicense', 'mynumber'].includes(val))
+    throw new commander.InvalidArgumentError('The type option can use \'driverslicense\' or \'mynumber\'');
+  return val;
+}
+
 // Parse arguments.
 program
   .description('Scan document from image')
   .requiredOption('-i, --input <string>', 'Image path or Data URL', validateImg)
   .option('-o, --output <string>', 'Output image path of the found document')
   // .option('-r, --aspect <string>', 'Resize the scanned document to the specified aspect ratio. Typing as a width:height ratio (like 4:5 or 1.618:1).', validateAspectRatio)
+  .requiredOption('-t, --type <string>', 'OCR document type. \'driverslicense\' or \'mynumber\' can be used', validateType)
+  .option('-d, --debug', 'Display debug image on display', false)
   .parse();
 const opts = program.opts();
 
 // Generate command arguments.
-const args = ['-i', opts.input, '-p'];
+const args = [
+  '-i', opts.input,
+  '-p',
+  '-t', opts.type];
 if (opts.output)
   args.push('-o', opts.output);
 // if (opts.aspect)
 //   args.push('-r', opts.aspect);
+if (opts.debug)
+  args.push('-d');
 
 // Scan document.
 PythonShell.run('scan.py', {args}, (err, res) => {

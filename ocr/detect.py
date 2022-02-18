@@ -5,30 +5,28 @@ import re
 import re
 from dotmap import DotMap
 import ocr.utils as utils
-# from ocr.logger import logging
+from ocr.logger import logging
 
-def main(opts = dict()):
+def detect(opts = dict()):
   """Detect document from image.
   Args:
     opts.input: Image path or Data URL.
     opts.output: Output image path of the found document.
     opts.aspect: Resize the scanned document to the specified aspect ratio. Typing as a width:height ratio (like 4:5 or 1.618:1).
+    opts.debug: Display debug image on display.
   Returns:
     Return detected document image.
   """
   # Initialize options.
-  opts = dict(
-    input = None,
-    output = None,
-    aspect = None) | opts
+  opts = dict(input = None, output = None, aspect = None, debug = False) | opts
   opts = DotMap(opts)
 
-  print(f'opts.input={opts.input[:50]}')
-  print(f'opts.output={opts.output}')
-  print(f'opts.aspect={opts.aspect}')
+  logging.debug(f'opts.input={opts.input[:50]}')
+  logging.debug(f'opts.output={opts.output}')
+  logging.debug(f'opts.aspect={opts.aspect}')
 
   # Validate options.
-  validOptions(opts)
+  _validOptions(opts)
 
   # load an image.
   if utils.isDataURL(opts.input):
@@ -38,27 +36,27 @@ def main(opts = dict()):
 
   # Resize the image.
   resizedImg, resizeRatio = utils.resizeImage(img, height=600)
-  utils.show('original', resizedImg)
+  if opts.debug: utils.show('original', resizedImg)
 
   # Make a copy.
   copyImg = resizedImg.copy()
 
   # Find the contour of the rectangle with the largest area.
-  maxCnt = findRectangleContour(resizedImg)
+  maxCnt = _findRectangleContour(resizedImg, opts.debug)
 
   # Rectangle contour not found.
   if maxCnt is None:
-    print('Rectangle contour not found')
+    logging.debug('Rectangle contour not found')
     return None
 
   # Draw a contour.
   cv2.drawContours(copyImg, [maxCnt], -1, (0,255,0), 2)
-  utils.show('marked', copyImg)
+  if opts.debug: utils.show('marked', copyImg)
 
   # Apply the four point tranform to obtain a "birds eye view" of the image.
-  warpImg = fourPointTransform(maxCnt/resizeRatio, img)
+  warpImg = _fourPointTransform(maxCnt/resizeRatio, img)
   warpImg, _ = utils.resizeImage(warpImg, height=800)
-  utils.show('warped', warpImg)
+  if opts.debug: utils.show('warped', warpImg)
 
   # Resizes the document image with the specified aspect ratio.
   if opts.aspect:
@@ -72,14 +70,14 @@ def main(opts = dict()):
       resizeHeight = round(width * (heightRatio / widthRatio))
     else:
       resizeWidth = round(height / (heightRatio / widthRatio))
-    print(f'resize={resizeWidth}/{resizeHeight}')
+    logging.debug(f'resize={resizeWidth}/{resizeHeight}')
     warpImg = cv2.resize(warpImg, (resizeWidth, resizeHeight), cv2.INTER_AREA)
-    utils.show(f'resize to {widthRatio}:{heightRatio} ratio', warpImg)
+    if opts.debug: utils.show(f'resize to {widthRatio}:{heightRatio} ratio', warpImg)
 
   # Write the image to a file if you have the output option.
   if opts.output:
     cv2.imwrite(opts.output, warpImg)
-    print(f'Output {opts.output}')
+    logging.debug(f'Output {opts.output}')
 
   # Print the image Data URL if you have a print option.
   dataURL, _ = utils.toDataURL(warpImg, utils.getMime(opts.input))
@@ -87,7 +85,7 @@ def main(opts = dict()):
   # b64, _ = utils.toBase64(warpImg, utils.getMime(opts.input))
   # return b64
 
-def validOptions(opts): 
+def _validOptions(opts): 
   """Validate options.
   Args:
     opts.input: Image path or Data URL.
@@ -114,7 +112,7 @@ def validOptions(opts):
     if float(widthRatio) == 0 or float(htRatio) == 0:
       raise ValueError('ZERO cannot be used for aspect ratio width and height')
   
-def findRectangleContour(img):
+def _findRectangleContour(img, debug=False):
   """Find the contour of the rectangle with the largest area.
   Args:
     img: CV2 Image object.
@@ -123,16 +121,16 @@ def findRectangleContour(img):
   """
   # Grayscale.
   grayImg = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-  utils.show('grayscale', grayImg)
+  if debug: utils.show('grayscale', grayImg)
 
   # Remove image noise.
   grayImg = cv2.medianBlur(grayImg, 5)
   grayImg = cv2.erode(grayImg, kernel=np.ones((5,5),np.uint8), iterations=1)
   grayImg = cv2.adaptiveThreshold(grayImg, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY, 11, 2)
-  utils.show('noise reduction', grayImg)
+  if debug: utils.show('noise reduction', grayImg)
   edgedImg = cv2.Canny(grayImg, 30, 400)
   # edgedImg = cv2.Canny(grayImg, 100, 200, apertureSize=3)
-  utils.show('edged', edgedImg)
+  if debug: utils.show('edged', edgedImg)
 
   # Find the contour.
   cnts, _ = cv2.findContours(edgedImg, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
@@ -159,7 +157,7 @@ def findRectangleContour(img):
   # cnt = max(cnts, key = cv2.contourArea)
   # return cv2.approxPolyDP(cnt, 0.02 * cv2.arcLength(cnt, True), True)
 
-def convertContourToRect(cnt):
+def _convertContourToRect(cnt):
   """Convert contour points (x, y) to four external rectangle points (x, y).
   Args:
     cnt: Contour points (x, y).
@@ -183,7 +181,7 @@ def convertContourToRect(cnt):
   # Return the rectangle coordinates of the contour.
   return rect
 
-def fourPointTransform(cnt, origImg):
+def _fourPointTransform(cnt, origImg):
   """Return a Keystone correction image (ndarray) of a rectangle on the image.
   Args:
     cnt: Contour points (x, y).
@@ -192,7 +190,7 @@ def fourPointTransform(cnt, origImg):
     Return a Keystone correction image (ndarray).
   """
   # Contour quadrilateral coordinates.
-  rect = convertContourToRect(cnt)
+  rect = _convertContourToRect(cnt)
 
   # Compute the width of the new image, which will be the maximum distance between bottom-right and bottom-left x-coordiates or the top-right and top-left x-coordinates
   (tl, tr, br, bl) = rect

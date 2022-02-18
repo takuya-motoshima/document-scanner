@@ -18,27 +18,27 @@ Use scan.py to scan the document in Python.
 scan.py help.
 ```sh
 python scan.py --help
-# usage: scan.py [-h] -i INPUT [-o OUTPUT] [-p] -t {driverslicense,mynumber}
-# 
-# optional arguments:
-#   -h, --help            show this help message and exit
-#   -i INPUT, --input INPUT
-#                         Image path or Data URL
-#   -o OUTPUT, --output OUTPUT
-#                         Output image path of the found document
-#   -p, --print-data-url  Print the Dat URL of the document
-#   -t {driverslicense,mynumber}, --type {driverslicense,mynumber}
-#                         OCR document type
+# Output: usage: scan.py [-h] -i INPUT [-o OUTPUT] [-p] -t {driverslicense,mynumber} [-d]
+#         optional arguments:
+#           -h, --help            show this help message and exit
+#           -i INPUT, --input INPUT
+#                                 Image path or Data URL
+#           -o OUTPUT, --output OUTPUT
+#                                 Output image path of the found document
+#           -p, --print           Print the Data URL of the detected document
+#           -t {driverslicense,mynumber}, --type {driverslicense,mynumber}
+#                                 OCR document type
+#           -d, --debug           Display debug image on display
 ```
 
 Scan Japanese driver's license card.
 ```sh
-python scan.py -i img/license.png -t driverslicense
+python scan.py -i img/license.png -t driverslicense --debug
 ```
 
 Scan Japanese My Number Card.
 ```sh
-python scan.py -i img/mynumber.png -t mynumber
+python scan.py -i img/mynumber.png -t mynumber --debug
 ```
 
 ## Unit test
