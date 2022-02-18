@@ -2,7 +2,6 @@ import cv2
 import numpy as np
 import os
 import re
-import re
 from dotmap import DotMap
 import ocr.utils as utils
 from ocr.logger import logging
