@@ -7,7 +7,7 @@ from dotmap import DotMap
 import ocr.utils as utils
 # from ocr.logger import logging
 
-def main(opts = dict()):
+def detect(opts = dict()):
   """Detect document from image.
   Args:
     opts.input: Image path or Data URL.
@@ -28,7 +28,7 @@ def main(opts = dict()):
   print(f'opts.aspect={opts.aspect}')
 
   # Validate options.
-  validOptions(opts)
+  _validOptions(opts)
 
   # load an image.
   if utils.isDataURL(opts.input):
@@ -44,7 +44,7 @@ def main(opts = dict()):
   copyImg = resizedImg.copy()
 
   # Find the contour of the rectangle with the largest area.
-  maxCnt = findRectangleContour(resizedImg)
+  maxCnt = _findRectangleContour(resizedImg)
 
   # Rectangle contour not found.
   if maxCnt is None:
@@ -56,7 +56,7 @@ def main(opts = dict()):
   utils.show('marked', copyImg)
 
   # Apply the four point tranform to obtain a "birds eye view" of the image.
-  warpImg = fourPointTransform(maxCnt/resizeRatio, img)
+  warpImg = _fourPointTransform(maxCnt/resizeRatio, img)
   warpImg, _ = utils.resizeImage(warpImg, height=800)
   utils.show('warped', warpImg)
 
@@ -87,7 +87,7 @@ def main(opts = dict()):
   # b64, _ = utils.toBase64(warpImg, utils.getMime(opts.input))
   # return b64
 
-def validOptions(opts): 
+def _validOptions(opts): 
   """Validate options.
   Args:
     opts.input: Image path or Data URL.
@@ -114,7 +114,7 @@ def validOptions(opts):
     if float(widthRatio) == 0 or float(htRatio) == 0:
       raise ValueError('ZERO cannot be used for aspect ratio width and height')
   
-def findRectangleContour(img):
+def _findRectangleContour(img):
   """Find the contour of the rectangle with the largest area.
   Args:
     img: CV2 Image object.
@@ -159,7 +159,7 @@ def findRectangleContour(img):
   # cnt = max(cnts, key = cv2.contourArea)
   # return cv2.approxPolyDP(cnt, 0.02 * cv2.arcLength(cnt, True), True)
 
-def convertContourToRect(cnt):
+def _convertContourToRect(cnt):
   """Convert contour points (x, y) to four external rectangle points (x, y).
   Args:
     cnt: Contour points (x, y).
@@ -183,7 +183,7 @@ def convertContourToRect(cnt):
   # Return the rectangle coordinates of the contour.
   return rect
 
-def fourPointTransform(cnt, origImg):
+def _fourPointTransform(cnt, origImg):
   """Return a Keystone correction image (ndarray) of a rectangle on the image.
   Args:
     cnt: Contour points (x, y).
@@ -192,7 +192,7 @@ def fourPointTransform(cnt, origImg):
     Return a Keystone correction image (ndarray).
   """
   # Contour quadrilateral coordinates.
-  rect = convertContourToRect(cnt)
+  rect = _convertContourToRect(cnt)
 
   # Compute the width of the new image, which will be the maximum distance between bottom-right and bottom-left x-coordiates or the top-right and top-left x-coordinates
   (tl, tr, br, bl) = rect

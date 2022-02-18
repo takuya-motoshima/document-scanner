@@ -11,7 +11,7 @@ from dotmap import DotMap
 import ocr.utils as utils
 # from ocr.logger import logging
 
-def main(opts = dict()):
+def scan(opts = dict()):
   """Scan document.
   Args:
     opts.input: Image path or Data URL.
@@ -31,7 +31,7 @@ def main(opts = dict()):
   print(f'opts.type={opts.type}')
 
   # Validate options.
-  validOptions(opts)
+  _validOptions(opts)
 
   # load an image.
   if utils.isDataURL(opts.input):
@@ -40,30 +40,29 @@ def main(opts = dict()):
     img = cv2.imread(opts.input)
 
   # Detect text from image.
-  texts = detectText(img, utils.getMime(opts.input))
+  texts = _detectText(img, utils.getMime(opts.input))
   if not texts:
     # Could not find the text in the image.
     print('Text not found in image')
     return None
 
   # Find the rectangular point of the symbol from the result of document_text_detection.
-  syms = findRectangleSymbol(texts, img)
+  syms = _findRectangleSymbol(texts, img)
 
   # Get annotations.
-  annots = loadAnnotationXML(opts.type)
+  annots = _loadAnnotationXML(opts.type)
 
   # Show annotation rectangle for debugging.
-  showAnnotationRectangle(img, annots)
+  _showAnnotationRectangle(img, annots)
 
   # Find text that inscribes matches the field template rectangle.
-  matches = matching(annots, syms)
+  matches = _matching(annots, syms)
 
   # Show detected text rectangles for debugging.
-  showDetectedTextRectangle(img, matches)
-
+  _showDetectedTextRectangle(img, matches)
   return matches
 
-def validOptions(opts): 
+def _validOptions(opts): 
   """Validate options.
   Args:
     opts.input: Image path or Data URL.
@@ -89,7 +88,7 @@ def validOptions(opts):
   if opts.type != 'driverslicense' and opts.type != 'mynumber':
     raise ValueError('Invalid type. Use \'driverslicense\' or \'mynumber\'')
 
-def detectText(img, mime):
+def _detectText(img, mime):
   """Detect text from image.
   Args:
     img: CV2 Image object.
@@ -127,7 +126,7 @@ def detectText(img, mime):
   # Returns the text detection result of the first image.
   return res.full_text_annotation.pages[0]
 
-def findRectangleSymbol(texts, img, ndigits = 3):
+def _findRectangleSymbol(texts, img, ndigits = 3):
   """Find the rectangular point of the symbol from the result of document_text_detection.
   Args:
     texts: Text detection result of document_text_detection.
@@ -152,7 +151,7 @@ def findRectangleSymbol(texts, img, ndigits = 3):
   # Sort the symbol rectangles from top left to bottom right.
   return sorted(syms, key=lambda sym: np.linalg.norm(np.array((sym.rect[0][0], sym.rect[0][1])) - np.array([0,0])))
 
-def loadAnnotationXML(type, ndigits = 3):
+def _loadAnnotationXML(type, ndigits = 3):
   """Returns the rectangular point of the OCR field.
   Args:
     type: Document type.
@@ -196,7 +195,7 @@ def loadAnnotationXML(type, ndigits = 3):
     )))
   return annots
 
-def matching(annots, syms):
+def _matching(annots, syms):
   """Find text that inscribes matches the field template rectangle.
   Args:
     annots: Template annotation.
@@ -248,7 +247,7 @@ def matching(annots, syms):
         matches[annot.name].rect.ymax = symYmax if matches[annot.name].rect.ymax is None or symYmax > matches[annot.name].rect.ymax else matches[annot.name].rect.ymax
   return matches
 
-def showAnnotationRectangle(img, annots):
+def _showAnnotationRectangle(img, annots):
   """Show annotation rectangle.
   Args:
     img: CV2 Image object.
@@ -264,7 +263,7 @@ def showAnnotationRectangle(img, annots):
       (0,0,255), 2)
   # utils.show('Annotation rectangle', tmpImg)
 
-def showDetectedTextRectangle(img, matches):
+def _showDetectedTextRectangle(img, matches):
   """Show detected text rectangle.
   Args:
     img: CV2 Image object.
