@@ -18,14 +18,12 @@ def scan(opts = dict()):
     opts.type: Document type.
                 'driverslicense': Driver's license card
                 'mynumber': My number card
+    opts.debug: Display debug image on display.
   Returns:
     Return the text detected from the document.
   """
   # Initialize options.
-  opts = dict(
-    input = None,
-    type = None
-  ) | opts
+  opts = dict(input = None, type = None, debug = False) | opts
   opts = DotMap(opts)
   logging.debug(f'opts.input={opts.input[:50]}')
   logging.debug(f'opts.type={opts.type}')
@@ -52,14 +50,14 @@ def scan(opts = dict()):
   # Get annotations.
   annots = _loadAnnotationXML(opts.type)
 
-  # Show annotation rectangle for debugging.
-  _showAnnotationRectangle(img, annots)
+  # # Show annotation rectangle for debugging.
+  # if opts.debug: _showAnnotationRectangle(img, annots)
 
   # Find text that inscribes matches the field template rectangle.
   matches = _matching(annots, syms)
 
   # Show detected text rectangles for debugging.
-  _showDetectedTextRectangle(img, matches)
+  if opts.debug: _showDetectedTextRectangle(img, matches)
   return matches
 
 def _validOptions(opts): 

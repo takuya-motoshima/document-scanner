@@ -13,14 +13,12 @@ def detect(opts = dict()):
     opts.input: Image path or Data URL.
     opts.output: Output image path of the found document.
     opts.aspect: Resize the scanned document to the specified aspect ratio. Typing as a width:height ratio (like 4:5 or 1.618:1).
+    opts.debug: Display debug image on display.
   Returns:
     Return detected document image.
   """
   # Initialize options.
-  opts = dict(
-    input = None,
-    output = None,
-    aspect = None) | opts
+  opts = dict(input = None, output = None, aspect = None, debug = False) | opts
   opts = DotMap(opts)
 
   logging.debug(f'opts.input={opts.input[:50]}')
@@ -38,13 +36,13 @@ def detect(opts = dict()):
 
   # Resize the image.
   resizedImg, resizeRatio = utils.resizeImage(img, height=600)
-  utils.show('original', resizedImg)
+  if opts.debug: utils.show('original', resizedImg)
 
   # Make a copy.
   copyImg = resizedImg.copy()
 
   # Find the contour of the rectangle with the largest area.
-  maxCnt = _findRectangleContour(resizedImg)
+  maxCnt = _findRectangleContour(resizedImg, opts.debug)
 
   # Rectangle contour not found.
   if maxCnt is None:
@@ -53,12 +51,12 @@ def detect(opts = dict()):
 
   # Draw a contour.
   cv2.drawContours(copyImg, [maxCnt], -1, (0,255,0), 2)
-  utils.show('marked', copyImg)
+  if opts.debug: utils.show('marked', copyImg)
 
   # Apply the four point tranform to obtain a "birds eye view" of the image.
   warpImg = _fourPointTransform(maxCnt/resizeRatio, img)
   warpImg, _ = utils.resizeImage(warpImg, height=800)
-  utils.show('warped', warpImg)
+  if opts.debug: utils.show('warped', warpImg)
 
   # Resizes the document image with the specified aspect ratio.
   if opts.aspect:
@@ -74,7 +72,7 @@ def detect(opts = dict()):
       resizeWidth = round(height / (heightRatio / widthRatio))
     logging.debug(f'resize={resizeWidth}/{resizeHeight}')
     warpImg = cv2.resize(warpImg, (resizeWidth, resizeHeight), cv2.INTER_AREA)
-    utils.show(f'resize to {widthRatio}:{heightRatio} ratio', warpImg)
+    if opts.debug: utils.show(f'resize to {widthRatio}:{heightRatio} ratio', warpImg)
 
   # Write the image to a file if you have the output option.
   if opts.output:
@@ -114,7 +112,7 @@ def _validOptions(opts):
     if float(widthRatio) == 0 or float(htRatio) == 0:
       raise ValueError('ZERO cannot be used for aspect ratio width and height')
   
-def _findRectangleContour(img):
+def _findRectangleContour(img, debug=False):
   """Find the contour of the rectangle with the largest area.
   Args:
     img: CV2 Image object.
@@ -123,16 +121,16 @@ def _findRectangleContour(img):
   """
   # Grayscale.
   grayImg = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-  utils.show('grayscale', grayImg)
+  if debug: utils.show('grayscale', grayImg)
 
   # Remove image noise.
   grayImg = cv2.medianBlur(grayImg, 5)
   grayImg = cv2.erode(grayImg, kernel=np.ones((5,5),np.uint8), iterations=1)
   grayImg = cv2.adaptiveThreshold(grayImg, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY, 11, 2)
-  utils.show('noise reduction', grayImg)
+  if debug: utils.show('noise reduction', grayImg)
   edgedImg = cv2.Canny(grayImg, 30, 400)
   # edgedImg = cv2.Canny(grayImg, 100, 200, apertureSize=3)
-  utils.show('edged', edgedImg)
+  if debug: utils.show('edged', edgedImg)
 
   # Find the contour.
   cnts, _ = cv2.findContours(edgedImg, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
