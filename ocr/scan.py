@@ -6,7 +6,6 @@ import os
 import cv2
 import numpy as np
 import xml.etree.ElementTree as ET
-import datetime
 from dotmap import DotMap
 import ocr.utils as utils
 from ocr.logger import logging
@@ -115,7 +114,7 @@ def _detectText(img, mime):
     image_context = vision.ImageContext(language_hints =['ja']))
 
   # Write OCR results to a file for debugging.
-  utils.writeJson(f'output/{datetime.datetime.now().strftime("%Y%m%d%H%M%S")}.json', vision.AnnotateImageResponse.to_dict(res))
+  utils.writeJson(f'output/{utils.getNow("%Y%m%d%H%M%S")}.json', vision.AnnotateImageResponse.to_dict(res))
 
   # Returns None if the text cannot be found.
   if not res:
