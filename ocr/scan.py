@@ -90,6 +90,7 @@ def _detectText(img, mime):
   """Detect text from image.
   Args:
     img: CV2 Image object.
+    mime: Image MIME type.
   Returns
     Returns text detection result.
   """
@@ -114,8 +115,7 @@ def _detectText(img, mime):
     image_context = vision.ImageContext(language_hints =['ja']))
 
   # Write OCR results to a file for debugging.
-  now = datetime.datetime.now().strftime('%Y%m%d%H%M%S')
-  utils.writeJson(f'output/text_detection_{now}.json', vision.AnnotateImageResponse.to_dict(res))
+  utils.writeJson(f'output/{datetime.datetime.now().strftime("%Y%m%d%H%M%S")}.json', vision.AnnotateImageResponse.to_dict(res))
 
   # Returns None if the text cannot be found.
   if not res:
