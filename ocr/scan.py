@@ -104,6 +104,9 @@ def _detectText(img, mime):
     raise RuntimeError('GOOGLE_CREDS not found in ".env"')
   creds = json.loads(config['GOOGLE_CREDS'])
   
+  # Loading private key (which contains line terminators like '\n') as an environment variable is tricky. Most shells would pad the terminator and treat it as a literal -- i.e. '\\n'. You will have to inspect how that value gets fed into your Python code, and preprocess/unpad accordingly.
+  creds['private_key'] = creds['private_key'].replace('\\n', '\n')
+
   # Instantiates a client.
   client = vision.ImageAnnotatorClient(credentials = service_account.Credentials.from_service_account_info(creds))
 
