@@ -260,7 +260,7 @@ def _showAnnotationRectangle(img, annots):
     cv2.rectangle(tmpImg,
       [round(pt1[0] * width), round(pt1[1] * height)],
       [round(pt2[0] * width), round(pt2[1] * height)],
-      (0,0,255), 2)
+      (0,0,255), 3)
   utils.show('Annotation rectangle', tmpImg)
 
 def _showDetectedTextRectangle(img, matches):
@@ -277,5 +277,5 @@ def _showDetectedTextRectangle(img, matches):
     cv2.rectangle(tmpImg,
       [round(match.rect.xmin * width), round(match.rect.ymin * height)],
       [round(match.rect.xmax * width), round(match.rect.ymax * height)],
-      (0,0,255), 2)
+      (0,0,255), 3)
   utils.show('Detected text rectangle', tmpImg)
