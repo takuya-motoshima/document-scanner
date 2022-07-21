@@ -1,7 +1,7 @@
 {
-  "name": "document-scanner",
+  "name": "prototype",
   "version": "1.0.0",
-  "description": "Detect documents from images.",
+  "description": "",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -10,9 +10,8 @@
   "author": "Takuya Motoshima <developer.takuyamotoshima@gmail.com> (https://twitter.com/TakuyaMotoshima)",
   "license": "MIT",
   "dependencies": {
-    "ajv": "^8.9.0",
-    "canvas": "^2.9.3",
-    "commander": "^8.3.0",
+    "@google-cloud/vision": "^2.4.2",
+    "dotenv": "^14.3.2",
     "moment": "^2.29.1",
     "python-shell": "^3.0.1"
   }

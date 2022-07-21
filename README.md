@@ -1,6 +1,9 @@
 # document-scanner
 Detect documents from images.
 
+## Requirement
+- The encoding option in logging.basicConfig() was only added in version 3.9 (https://docs.python.org/3/library/logging.html).
+
 ## Getting Started
 Install dependent packages.
 ```sh
