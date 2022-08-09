@@ -7,82 +7,84 @@ import cv2
 import numpy as np
 import xml.etree.ElementTree as ET
 from dotmap import DotMap
-import ocr.utils as utils
-from ocr.logger import logging
+import utils
+from pathlib import Path
 
-def scan(opts = dict()):
+def scanText(options = dict()):
   """Scan document.
   Args:
-    opts.input: Image path or Data URL.
-    opts.type: Document type.
+    options.input: Image path or Data URL.
+    options.type: Document type.
                 'driverslicense': Driver's license card
                 'mynumber': My number card
-    opts.debug: Display debug image on display.
+    options.debug: Display debug image on display.
   Returns:
     Return the text detected from the document.
   """
   # Initialize options.
-  opts = dict(input = None, type = None, debug = False) | opts
-  opts = DotMap(opts)
-  logging.debug(f'opts.input={opts.input[:50]}')
-  logging.debug(f'opts.type={opts.type}')
+  options = dict(input = None, type = None, debug = False) | options
+  options = DotMap(options)
+  utils.logging.debug(f'options.input={options.input[:50]}')
+  utils.logging.debug(f'options.type={options.type}')
 
   # Validate options.
-  _validOptions(opts)
+  _validOptions(options)
 
   # load an image.
-  if utils.isDataURL(opts.input):
-    img = utils.toNdarray(opts.input)
+  if utils.isDataUrl(options.input):
+    img = utils.toNdarray(options.input)
   else:
-    img = cv2.imread(opts.input)
+    img = cv2.imread(options.input)
 
   # Detect text from image.
-  texts = _detectText(img, utils.getMime(opts.input))
+  texts = _detectText(img, utils.getMime(options.input))
   if not texts:
     # Could not find the text in the image.
-    logging.debug('Text not found in image')
+    utils.logging.debug('Text not found in image')
     return None
 
   # Find the rectangular point of the symbol from the result of document_text_detection.
   syms = _findRectangleSymbol(texts, img)
 
   # Get annotations.
-  annots = _loadAnnotationXML(opts.type)
+  annots = _loadAnnotationXML(options.type)
 
   # # Show annotation rectangle for debugging.
-  # if opts.debug: _showAnnotationRectangle(img, annots)
+  if options.debug:
+    _showAnnotationRectangle(img, annots)
 
   # Find text that inscribes matches the field template rectangle.
   matches = _matching(annots, syms)
 
   # Show detected text rectangles for debugging.
-  if opts.debug: _showDetectedTextRectangle(img, matches)
+  if options.debug:
+    _showDetectedTextRectangle(img, matches)
   return matches
 
-def _validOptions(opts): 
+def _validOptions(options): 
   """Validate options.
   Args:
-    opts.input: Image path or Data URL.
-    opts.type: Document type.
+    options.input: Image path or Data URL.
+    options.type: Document type.
                 'driverslicense': Driver's license card
                 'mynumber': My number card
   Raises:
     ValueError: If there are invalid options
   """
   # input option required.
-  if not opts.input:
+  if not options.input:
     raise ValueError('input option required')
 
   # Input options only allow image path or data URL.
-  if not utils.isDataURL(opts.input) and not os.path.exists(opts.input) and os.path.isfile(opts.input):
-    raise ValueError(f'{opts.input} Image file not found')
+  if not utils.isDataUrl(options.input) and not os.path.exists(options.input) and os.path.isfile(options.input):
+    raise ValueError(f'{options.input} Image file not found')
 
   # Document type required.
-  if not opts.type:
+  if not options.type:
     raise ValueError('type option required')
   
   # Check if the document type is valid.
-  if opts.type != 'driverslicense' and opts.type != 'mynumber':
+  if options.type != 'driverslicense' and options.type != 'mynumber':
     raise ValueError('Invalid type. Use \'driverslicense\' or \'mynumber\'')
 
 def _detectText(img, mime):
@@ -117,7 +119,7 @@ def _detectText(img, mime):
     image_context = vision.ImageContext(language_hints =['ja']))
 
   # Write OCR results to a file for debugging.
-  utils.writeJson(f'output/{utils.getNow("%Y%m%d%H%M%S")}.json', vision.AnnotateImageResponse.to_dict(res))
+  utils.writeJson(f'logs/response_{utils.getNow("%Y%m%d%H%M%S")}.json', vision.AnnotateImageResponse.to_dict(res))
 
   # Returns None if the text cannot be found.
   if not res:
@@ -163,11 +165,12 @@ def _loadAnnotationXML(type, ndigits = 3):
     The points of the rectangle are in the order of upper left, upper right, lower right, lower left.
   """
   # Annotation XML to load.
+  srcDir = Path(__file__).resolve().parents[1]
   if type == 'driverslicense':
-    xmlPath = './ocr/annotations/driverslicense.xml'
+    xmlPath = f'{srcDir}/annotations/driverslicense.xml'
   elif type == 'mynumber':
-    xmlPath = './ocr/annotations/mynumber.xml'
-  logging.debug(f'Load {xmlPath}')
+    xmlPath = f'{srcDir}/annotations/mynumber.xml'
+  utils.logging.debug(f'Load {xmlPath}')
 
   # Parse XML.
   tree = ET.parse(xmlPath)
@@ -236,7 +239,7 @@ def _matching(annots, syms):
       ratio = round(interArea / symArea, 3)
 
       # # Debug template fields and detected text.
-      # logging.debug(f'{annot.name} -> {sym.text} (iou={iou}, ratio={ratio})')
+      # utils.logging.debug(f'{annot.name} -> {sym.text} (iou={iou}, ratio={ratio})')
 
       # If the template field and the detection text are inscribed, get that text.
       if ratio > .5:
@@ -260,8 +263,8 @@ def _showAnnotationRectangle(img, annots):
     cv2.rectangle(tmpImg,
       [round(pt1[0] * width), round(pt1[1] * height)],
       [round(pt2[0] * width), round(pt2[1] * height)],
-      (0,0,255), 2)
-  utils.show('Annotation rectangle', tmpImg)
+      (0,0,255), 3)
+  utils.showImage('Annotation rectangle', tmpImg)
 
 def _showDetectedTextRectangle(img, matches):
   """Show detected text rectangle.
@@ -277,5 +280,5 @@ def _showDetectedTextRectangle(img, matches):
     cv2.rectangle(tmpImg,
       [round(match.rect.xmin * width), round(match.rect.ymin * height)],
       [round(match.rect.xmax * width), round(match.rect.ymax * height)],
-      (0,0,255), 2)
-  utils.show('Detected text rectangle', tmpImg)
+      (0,0,255), 3)
+  utils.showImage('Detected text rectangle', tmpImg)

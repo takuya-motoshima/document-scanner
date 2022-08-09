@@ -1,23 +1,22 @@
 # document-scanner
 Detect documents from images.
 
-## Getting Started
+## Requirements
+- Python 3.9 (tested under Python 3.9.10)
+
+## Installation
 Install dependent packages.
+
 ```sh
-pip3 install opencv-python
-pip3 install opencv-contrib-python
-pip3 install matplotlib
-pip3 install google-cloud-vision
-pip3 install python-dotenv
-pip3 install dotmap
+python -m pip install --no-cache-dir -r requirements.txt
+# python3.9 -m pip install --no-cache-dir -r requirements.txt
 ```
 
 ## Usage
 Use scan.py to scan the document in Python.
 
-scan.py help.
 ```sh
-python scan.py --help
+python src/scan.py --help
 # Output: usage: scan.py [-h] -i INPUT [-o OUTPUT] [-p] -t {driverslicense,mynumber} [-d]
 #         optional arguments:
 #           -h, --help            show this help message and exit
@@ -33,12 +32,12 @@ python scan.py --help
 
 Scan Japanese driver's license card.
 ```sh
-python scan.py -i img/license.png -t driverslicense --debug
+python src/scan.py -i img/license.png -t driverslicense --debug
 ```
 
 Scan Japanese My Number Card.
 ```sh
-python scan.py -i img/mynumber.png -t mynumber --debug
+python src/scan.py -i img/mynumber.png -t mynumber --debug
 ```
 
 ## Unit test

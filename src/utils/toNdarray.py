@@ -2,7 +2,7 @@ import cv2
 import numpy as np
 import base64
 from urllib import request
-import ocr.utils as utils
+from .isDataUrl import isDataUrl
 
 def toNdarray(str): 
   """Image to Data URL.
@@ -11,7 +11,7 @@ def toNdarray(str):
   Returns:
     Return CV2 Image object.
   """
-  if utils.isDataURL(str):
+  if isDataUrl(str):
     # For Data URL.
     with request.urlopen(str) as res:
       data = res.read()

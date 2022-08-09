@@ -1,6 +1,6 @@
-import ocr.utils as utils
+from .toBase64 import toBase64
 
-def toDataURL(img, mime = None):
+def toDataUrl(img, mime = None):
   """Image to Data URL.
   Args:
     img: CV2 Image object or image path.
@@ -11,7 +11,7 @@ def toDataURL(img, mime = None):
     ValueError: Image types other than png, jpg, jpeg.
   """
   # to base64.
-  b64, mime = utils.toBase64(img, mime)
+  b64, mime = toBase64(img, mime)
 
   # Generates and returns a Data URL string based on base64.
   return f'data:image/{mime};base64,{b64}', mime

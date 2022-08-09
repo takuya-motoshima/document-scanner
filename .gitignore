@@ -1,7 +1,6 @@
 node_modules/
 __pycache__/
-output/*
 logs/*
+!logs/
 !.gitkeep
 .env
-tmp/

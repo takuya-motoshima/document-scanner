@@ -1,7 +1,7 @@
 import cv2
 import numpy as np
 import base64
-import ocr.utils as utils
+from .getMime import getMime
 
 def toBase64(img, mime = None):
   """Image to base64. 
@@ -27,7 +27,7 @@ def toBase64(img, mime = None):
   elif isinstance(img, str):
     # For image path.
     # Get MIME type.
-    mime = utils.getMime(img)
+    mime = getMime(img)
 
     # Image bytes object.
     with open(img, 'rb') as f:

@@ -1,115 +1,90 @@
 import cv2
 import numpy as np
 import os
-import re
 from dotmap import DotMap
-import ocr.utils as utils
-from ocr.logger import logging
+import utils
 
-def detect(opts = dict()):
+def detectDocument(options):
+# def detectDocument(options = dict()):
   """Detect document from image.
   Args:
-    opts.input: Image path or Data URL.
-    opts.output: Output image path of the found document.
-    opts.aspect: Resize the scanned document to the specified aspect ratio. Typing as a width:height ratio (like 4:5 or 1.618:1).
-    opts.debug: Display debug image on display.
+    options.input: Image path or Data URL.
+    options.output: Output image path of the found document.
+    options.debug: Display debug image on display.
   Returns:
     Return detected document image.
   """
   # Initialize options.
-  opts = dict(input = None, output = None, aspect = None, debug = False) | opts
-  opts = DotMap(opts)
+  options = DotMap(dict(input = None, output = None, debug = False) | options.toDict())
 
-  logging.debug(f'opts.input={opts.input[:50]}')
-  logging.debug(f'opts.output={opts.output}')
-  logging.debug(f'opts.aspect={opts.aspect}')
+  # input option required.
+  if not options.input:
+    raise ValueError('input option required')
 
-  # Validate options.
-  _validOptions(opts)
+  # Input options only allow image path or data URL.
+  if not utils.isDataUrl(options.input) and not os.path.exists(options.input) and os.path.isfile(options.input):
+    raise ValueError(f'{options.input} Image file not found')
 
   # load an image.
-  if utils.isDataURL(opts.input):
-    img = utils.toNdarray(opts.input)
+  if utils.isDataUrl(options.input):
+    img = utils.toNdarray(options.input)
   else:
-    img = cv2.imread(opts.input)
+    img = cv2.imread(options.input)
 
   # Resize the image.
   resizedImg, resizeRatio = utils.resizeImage(img, height=600)
-  if opts.debug: utils.show('original', resizedImg)
+  if options.debug:
+    utils.showImage('original', resizedImg)
 
   # Make a copy.
   copyImg = resizedImg.copy()
 
   # Find the contour of the rectangle with the largest area.
-  maxCnt = _findRectangleContour(resizedImg, opts.debug)
+  maxCnt = _findRectangleContour(resizedImg, options.debug)
 
   # Rectangle contour not found.
   if maxCnt is None:
-    logging.debug('Rectangle contour not found')
+    utils.logging.debug('Rectangle contour not found')
     return None
 
   # Draw a contour.
   cv2.drawContours(copyImg, [maxCnt], -1, (0,255,0), 2)
-  if opts.debug: utils.show('marked', copyImg)
+  if options.debug:
+    utils.showImage('marked', copyImg)
 
   # Apply the four point tranform to obtain a "birds eye view" of the image.
   warpImg = _fourPointTransform(maxCnt/resizeRatio, img)
   warpImg, _ = utils.resizeImage(warpImg, height=800)
-  if opts.debug: utils.show('warped', warpImg)
+  if options.debug:
+    utils.showImage('warped', warpImg)
 
   # Resizes the document image with the specified aspect ratio.
-  if opts.aspect:
-    width, height, _ = warpImg.shape
-    widthRatio, heightRatio = list(map(float, opts.aspect.split(':')))
-    resizeWidth = width
-    resizeHeight = height
+  width, height, _ = warpImg.shape
+  widthRatio, heightRatio = [8.56, 5.4]
+  resizeWidth = width
+  resizeHeight = height
 
-    # Resize so that the width and height after resizing are not smaller than before resizing.
-    if (height / width) < (heightRatio / widthRatio):
-      resizeHeight = round(width * (heightRatio / widthRatio))
-    else:
-      resizeWidth = round(height / (heightRatio / widthRatio))
-    logging.debug(f'resize={resizeWidth}/{resizeHeight}')
-    warpImg = cv2.resize(warpImg, (resizeWidth, resizeHeight), cv2.INTER_AREA)
-    if opts.debug: utils.show(f'resize to {widthRatio}:{heightRatio} ratio', warpImg)
+  # Resize so that the width and height after resizing are not smaller than before resizing.
+  if (height / width) < (heightRatio / widthRatio):
+    resizeHeight = round(width * (heightRatio / widthRatio))
+  else:
+    resizeWidth = round(height / (heightRatio / widthRatio))
+  utils.logging.debug(f'resize={resizeWidth}/{resizeHeight}')
+  warpImg = cv2.resize(warpImg, (resizeWidth, resizeHeight), cv2.INTER_AREA)
+  
+  if options.debug:
+    utils.showImage(f'resize to {widthRatio}:{heightRatio} ratio', warpImg)
 
   # Write the image to a file if you have the output option.
-  if opts.output:
-    cv2.imwrite(opts.output, warpImg)
-    logging.debug(f'Output {opts.output}')
+  if options.output:
+    cv2.imwrite(options.output, warpImg)
+    utils.logging.debug(f'Output {options.output}')
 
   # Print the image Data URL if you have a print option.
-  dataURL, _ = utils.toDataURL(warpImg, utils.getMime(opts.input))
-  return dataURL
-  # b64, _ = utils.toBase64(warpImg, utils.getMime(opts.input))
+  dataUrl, _ = utils.toDataUrl(warpImg, utils.getMime(options.input))
+  return dataUrl
+  # b64, _ = utils.toBase64(warpImg, utils.getMime(options.input))
   # return b64
-
-def _validOptions(opts): 
-  """Validate options.
-  Args:
-    opts.input: Image path or Data URL.
-    opts.output: Output image path of the found document.
-    opts.aspect: Resize the scanned document to the specified aspect ratio. Typing as a width:height ratio (like 4:5 or 1.618:1).
-  Raises:
-    ValueError: If there are invalid options
-  """
-  # input option required.
-  if not opts.input:
-    raise ValueError('input option required')
-
-  # Input options only allow image path or data URL.
-  if not utils.isDataURL(opts.input) and not os.path.exists(opts.input) and os.path.isfile(opts.input):
-    raise ValueError(f'{opts.input} Image file not found')
-
-  # The aspect ratio option allows the "width: height" format.
-  if opts.aspect:
-    matches = re.match(r'^((?!0\d)\d*(?:\.\d+)?):((?!0\d)\d*(?:\.\d+)?)$', opts.aspect)
-    if not matches:
-      raise ValueError('Aspect ratio option is invalid')
-    widthRatio = matches.group(1)
-    htRatio = matches.group(2)
-    if float(widthRatio) == 0 or float(htRatio) == 0:
-      raise ValueError('ZERO cannot be used for aspect ratio width and height')
   
 def _findRectangleContour(img, debug=False):
   """Find the contour of the rectangle with the largest area.
@@ -120,16 +95,18 @@ def _findRectangleContour(img, debug=False):
   """
   # Grayscale.
   grayImg = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-  if debug: utils.show('grayscale', grayImg)
+  if debug:
+    utils.showImage('grayscale', grayImg)
 
   # Remove image noise.
   grayImg = cv2.medianBlur(grayImg, 5)
   grayImg = cv2.erode(grayImg, kernel=np.ones((5,5),np.uint8), iterations=1)
   grayImg = cv2.adaptiveThreshold(grayImg, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY, 11, 2)
-  if debug: utils.show('noise reduction', grayImg)
-  edgedImg = cv2.Canny(grayImg, 30, 400)
-  # edgedImg = cv2.Canny(grayImg, 100, 200, apertureSize=3)
-  if debug: utils.show('edged', edgedImg)
+  if debug:
+    utils.showImage('noise reduction', grayImg)
+  edgedImg = _detectEdges(grayImg)
+  if debug:
+    utils.showImage('edged', edgedImg)
 
   # Find the contour.
   cnts, _ = cv2.findContours(edgedImg, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
@@ -143,8 +120,8 @@ def _findRectangleContour(img, debug=False):
   for cnt in cnts:
     # Approximate the contour.
     peri = cv2.arcLength(cnt, True)
-    approx = cv2.approxPolyDP(cnt, 0.02 * peri, True)
-    # approx = cv2.approxPolyDP(cnt, 0.1 * peri, True)
+    # approx = cv2.approxPolyDP(cnt, 0.02 * peri, True)
+    approx = cv2.approxPolyDP(cnt, 0.1 * peri, True)
     # approx = cv2.approxPolyDP(cnt, 0.005 * peri, True)
 
     # if our approximated contour has four points, we can assume it is rectangle.
@@ -179,6 +156,21 @@ def _convertContourToRect(cnt):
 
   # Return the rectangle coordinates of the contour.
   return rect
+
+def _detectEdges(img):
+  """Detects edges from an image.
+  Args:
+    img: Original image.
+  Returns:
+    Image after edge detection.
+  """
+  # median = np.median(img)
+  # sigma = 0.33
+  # minValue = int(max(0, (1.0 - sigma) * median))
+  # maxValue = int(max(255, (1.0 + sigma) * median))
+  # return cv2.Canny(img, minValue, maxValue)
+  return cv2.Canny(img, 30, 400)
+  # return cv2.Canny(img, 100, 200, apertureSize=3)
 
 def _fourPointTransform(cnt, origImg):
   """Return a Keystone correction image (ndarray) of a rectangle on the image.
