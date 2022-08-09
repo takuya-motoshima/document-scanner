@@ -3,7 +3,6 @@ const {program} = require('commander');
 const commander = require('commander');
 const fs = require('fs');
 const moment = require('moment');
-const { exit } = require('process');
 
 /**
  * Image option validation.
@@ -66,22 +65,22 @@ program
   .requiredOption('-t, --type <string>', 'OCR document type. \'driverslicense\' or \'mynumber\' can be used', validateType)
   .option('-d, --debug', 'Display debug image on display', false)
   .parse();
-const opts = program.opts();
+const options = program.opts();
 
 // Generate command arguments.
 const args = [
-  '-i', opts.input,
+  '-i', options.input,
   '-p',
-  '-t', opts.type];
-if (opts.output)
-  args.push('-o', opts.output);
-// if (opts.aspect)
-//   args.push('-r', opts.aspect);
-if (opts.debug)
+  '-t', options.type];
+if (options.output)
+  args.push('-o', options.output);
+// if (options.aspect)
+//   args.push('-r', options.aspect);
+if (options.debug)
   args.push('-d');
 
 // Scan document.
-PythonShell.run('scan.py', {args}, (err, res) => {
+PythonShell.run(`${__dirname}/scan.py`, {args}, (err, res) => {
   // Exception occurred in python.
   if (err)
     return void console.error(err.message);
@@ -95,7 +94,7 @@ PythonShell.run('scan.py', {args}, (err, res) => {
   console.log(`b64=${b64.slice(0, 100)}`);
 
   // Write document image to file.
-  const outputFile = `output/${moment().format('YYYYMMDDHHmmss')}.png`;
+  const outputFile = `logs/${moment().format('YYYYMMDDHHmmss')}.png`;
   fs.writeFileSync(outputFile, Buffer.from(b64, 'base64'));
   console.log(`Wtite ${outputFile}`);
 });

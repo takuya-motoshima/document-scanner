@@ -2,9 +2,8 @@ import cv2
 from importlib import import_module
 import importlib
 
-def show(title, img):
-# def show(title, img, scaleWidth = 500):
-  """Show image on display.
+def showImage(title, img):
+  """Show image.
   Args:
     title: Display title.
     img: CV2 Image object.
@@ -37,8 +36,6 @@ def show(title, img):
   
       # Resize image.
       dstImg = cv2.resize(img, (0, 0), fx=multiplier, fy=multiplier)
-      # scaleHeight = round(height * (scaleWidth / width))
-      # dstImg = cv2.resize(img, dsize=(scaleWidth, scaleHeight))
 
     x = round(screenWidth / 2 - (width * multiplier) / 2)
     y = round(screenHeight / 2 - (height * multiplier) / 2)

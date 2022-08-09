@@ -1,4 +1,4 @@
-import ocr.utils as utils
+from .calcIoU import calcIoU
 
 def calcGIoU(rectA, rectB):
   """Calculate GIoU for two rectangles.
@@ -15,7 +15,7 @@ def calcGIoU(rectA, rectB):
   bXmin, bYmin, bXmax, bYmax = rectB
 
   # Calculate IoU.
-  iou, interArea, aArea, bArea = utils.calcIoU(rectA, rectB)
+  iou, interArea, aArea, bArea = calcIoU(rectA, rectB)
 
   # Calculate the area of convex shape C.
   interXmin = min(aXmin, bXmin)

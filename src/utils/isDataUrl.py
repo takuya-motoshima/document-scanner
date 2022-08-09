@@ -1,6 +1,6 @@
 import re
 
-def isDataURL(str):
+def isDataUrl(str):
   """Check if it is a Data URL.
   Args:
     str: Character to check.
