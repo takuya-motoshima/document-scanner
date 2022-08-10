@@ -3,8 +3,8 @@ from .toBase64 import toBase64
 def toDataUrl(img, mime = None):
   """Image to Data URL.
   Args:
-    img: CV2 Image object or image path.
-    mime: The media type of the Data URL. Required if the image is an CV2 Image object.
+    img: CV2 Image or image path.
+    mime: The media type of the Data URL. Required if the image is an CV2 Image.
   Returns:
     Return Data URL and MIME type.
   Raises:

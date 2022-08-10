@@ -9,7 +9,7 @@ def toNdarray(str):
   Args:
     img: Image Data URL or image base64.
   Returns:
-    Return CV2 Image object.
+    Return CV2 Image.
   """
   if isDataUrl(str):
     # For Data URL.
