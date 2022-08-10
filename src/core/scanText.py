@@ -90,7 +90,7 @@ def _validOptions(options):
 def _detectText(img, mime):
   """Detect text from image.
   Args:
-    img: CV2 Image object.
+    img: CV2 Image.
     mime: Image MIME type.
   Returns
     Returns text detection result.
@@ -132,7 +132,7 @@ def _findRectangleSymbol(texts, img, ndigits = 3):
   """Find the rectangular point of the symbol from the result of document_text_detection.
   Args:
     texts: Text detection result of document_text_detection.
-    img: CV2 Image object.
+    img: CV2 Image.
     ndigits: Number of decimal places in the ratio of rectangular points.
   Returns:
     Returns a symbol rectangle point.
@@ -253,7 +253,7 @@ def _matching(annots, syms):
 def _showAnnotationRectangle(img, annots):
   """Show annotation rectangle.
   Args:
-    img: CV2 Image object.
+    img: CV2 Image.
     annots: Template annotation.
   """
   tmpImg = img.copy()
@@ -269,7 +269,7 @@ def _showAnnotationRectangle(img, annots):
 def _showDetectedTextRectangle(img, matches):
   """Show detected text rectangle.
   Args:
-    img: CV2 Image object.
+    img: CV2 Image.
     matches: Detected text rectangle.
   """
   tmpImg = img.copy()

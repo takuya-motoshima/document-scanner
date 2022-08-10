@@ -5,7 +5,6 @@ from dotmap import DotMap
 import utils
 
 def detectDocument(options):
-# def detectDocument(options = dict()):
   """Detect document from image.
   Args:
     options.input: Image path or Data URL.
@@ -15,7 +14,11 @@ def detectDocument(options):
     Return detected document image.
   """
   # Initialize options.
-  options = DotMap(dict(input = None, output = None, debug = False) | options.toDict())
+  options = DotMap(dict(
+    input = None,
+    output = None,
+    debug = False
+  ) | options.toDict())
 
   # input option required.
   if not options.input:
@@ -30,99 +33,95 @@ def detectDocument(options):
     img = utils.toNdarray(options.input)
   else:
     img = cv2.imread(options.input)
+  if options.debug:
+    utils.showImage('Original', img)
 
   # Resize the image.
-  resizedImg, resizeRatio = utils.resizeImage(img, height=600)
-  if options.debug:
-    utils.showImage('original', resizedImg)
+  resizeImg, resizeRatio = utils.resizeImage(img, height=600)
 
-  # Make a copy.
-  copyImg = resizedImg.copy()
-
-  # Find the contour of the rectangle with the largest area.
-  maxCnt = _findRectangleContour(resizedImg, options.debug)
-
-  # Rectangle contour not found.
-  if maxCnt is None:
-    utils.logging.debug('Rectangle contour not found')
+  # Detect document contour points.
+  contour = _detectDocumentContourPoints(resizeImg, options.debug)
+  if contour is None:
     return None
 
   # Draw a contour.
-  cv2.drawContours(copyImg, [maxCnt], -1, (0,255,0), 2)
   if options.debug:
-    utils.showImage('marked', copyImg)
+    tmpImg = resizeImg.copy()
+    cv2.drawContours(tmpImg, [contour], -1, (0,255,0), 2)
+    utils.showImage('Marked', tmpImg)
 
   # Apply the four point tranform to obtain a "birds eye view" of the image.
-  warpImg = _fourPointTransform(maxCnt/resizeRatio, img)
+  warpImg = _fourPointTransform(contour/resizeRatio, img)
   warpImg, _ = utils.resizeImage(warpImg, height=800)
   if options.debug:
-    utils.showImage('warped', warpImg)
+    utils.showImage('Warped', warpImg)
 
-  # Resizes the document image with the specified aspect ratio.
+  # Resize in the specified ratio.
   width, height, _ = warpImg.shape
   widthRatio, heightRatio = [8.56, 5.4]
   resizeWidth = width
   resizeHeight = height
-
-  # Resize so that the width and height after resizing are not smaller than before resizing.
   if (height / width) < (heightRatio / widthRatio):
     resizeHeight = round(width * (heightRatio / widthRatio))
   else:
     resizeWidth = round(height / (heightRatio / widthRatio))
   utils.logging.debug(f'resize={resizeWidth}/{resizeHeight}')
   warpImg = cv2.resize(warpImg, (resizeWidth, resizeHeight), cv2.INTER_AREA)
-  
-  if options.debug:
-    utils.showImage(f'resize to {widthRatio}:{heightRatio} ratio', warpImg)
+  utils.showImage('Warped', warpImg)
 
-  # Write the image to a file if you have the output option.
+  # Output the resulting image.
   if options.output:
     cv2.imwrite(options.output, warpImg)
     utils.logging.debug(f'Output {options.output}')
 
-  # Print the image Data URL if you have a print option.
+  # Returns the DataURL of the image.
   dataUrl, _ = utils.toDataUrl(warpImg, utils.getMime(options.input))
   return dataUrl
-  # b64, _ = utils.toBase64(warpImg, utils.getMime(options.input))
-  # return b64
   
-def _findRectangleContour(img, debug=False):
-  """Find the contour of the rectangle with the largest area.
+def _detectDocumentContourPoints(img, debug=False):
+  """Detect document contour points.
   Args:
-    img: CV2 Image object.
+    img: CV2 Image.
   Returns:
     Return a list (ndarray) of the points (x, y) found on the contour.
   """
-  # Grayscale.
+  # Grayscale the image.
   grayImg = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
   if debug:
-    utils.showImage('grayscale', grayImg)
+    utils.showImage('Grayscale', grayImg)
 
-  # Remove image noise.
-  grayImg = cv2.medianBlur(grayImg, 5)
-  grayImg = cv2.erode(grayImg, kernel=np.ones((5,5),np.uint8), iterations=1)
-  grayImg = cv2.adaptiveThreshold(grayImg, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY, 11, 2)
+  # Blur the image and remove noise.
+  medianImg = cv2.medianBlur(grayImg, ksize=5)
+
+  # Remove white noise. Shrink the white part and dilate the black part.
+  erosionImg = cv2.erode(medianImg, kernel=np.ones((5,5), np.uint8), iterations=1)
+
+  # Binarize the image (colors to black and white only).
+  threshImg = cv2.adaptiveThreshold(erosionImg, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY, 11, 2)
   if debug:
-    utils.showImage('noise reduction', grayImg)
-  edgedImg = _detectEdges(grayImg)
+    utils.showImage('Thresh', threshImg)
+
+  # Detect image edges.
+  edgedImg = cv2.Canny(threshImg, 30, 400)
+  # edgedImg = cv2.Canny(threshImg, 100, 200, apertureSize=3)
   if debug:
-    utils.showImage('edged', edgedImg)
+    utils.showImage('Edged', edgedImg)
 
   # Find the contour.
-  cnts, _ = cv2.findContours(edgedImg, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
+  contours, _ = cv2.findContours(edgedImg, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
 
   # If you can't find the contour.
-  if not cnts:
+  if not contours:
     return None
 
   # Find the rectangular contour with the largest area from the found contours.
-  cnts = sorted(cnts, key=cv2.contourArea, reverse=True)
-  for cnt in cnts:
+  contours = sorted(contours, key=cv2.contourArea, reverse=True)
+  for contour in contours:
     # Approximate the contour.
-    peri = cv2.arcLength(cnt, True)
-    # approx = cv2.approxPolyDP(cnt, 0.02 * peri, True)
-    approx = cv2.approxPolyDP(cnt, 0.1 * peri, True)
-    # approx = cv2.approxPolyDP(cnt, 0.005 * peri, True)
+    peri = cv2.arcLength(contour, True)
+    # approx = cv2.approxPolyDP(contour, 0.02 * peri, True)
+    approx = cv2.approxPolyDP(contour, 0.1 * peri, True)
+    # approx = cv2.approxPolyDP(contour, 0.005 * peri, True)
 
     # if our approximated contour has four points, we can assume it is rectangle.
     if len(approx) == 4:
@@ -130,18 +129,18 @@ def _findRectangleContour(img, debug=False):
 
   # If you can't find the rectangle contour.
   return None
-  # cnt = max(cnts, key = cv2.contourArea)
-  # return cv2.approxPolyDP(cnt, 0.02 * cv2.arcLength(cnt, True), True)
+  # contour = max(contours, key = cv2.contourArea)
+  # return cv2.approxPolyDP(contour, 0.02 * cv2.arcLength(contour, True), True)
 
-def _convertContourToRect(cnt):
+def _contourToRect(contour):
   """Convert contour points (x, y) to four external rectangle points (x, y).
   Args:
-    cnt: Contour points (x, y).
+    contour: Contour points (x, y).
   Returns:
     Return a rectangular list of points (4 rows 2 columns).
   """
   # Initialzie a list of coordinates that will be ordered such that the first entry in the list is the top-left, the second entry is the top-right, the third is the bottom-right, and the fourth is the bottom-left.
-  pts = cnt.reshape(4, 2)
+  pts = contour.reshape(4, 2)
   rect = np.zeros((4, 2), dtype = 'float32')
 
   # The top-left point will have the smallest sum, whereas the bottom-right point will have the largest sum.
@@ -157,31 +156,16 @@ def _convertContourToRect(cnt):
   # Return the rectangle coordinates of the contour.
   return rect
 
-def _detectEdges(img):
-  """Detects edges from an image.
-  Args:
-    img: Original image.
-  Returns:
-    Image after edge detection.
-  """
-  # median = np.median(img)
-  # sigma = 0.33
-  # minValue = int(max(0, (1.0 - sigma) * median))
-  # maxValue = int(max(255, (1.0 + sigma) * median))
-  # return cv2.Canny(img, minValue, maxValue)
-  return cv2.Canny(img, 30, 400)
-  # return cv2.Canny(img, 100, 200, apertureSize=3)
-
-def _fourPointTransform(cnt, origImg):
+def _fourPointTransform(contour, img):
   """Return a Keystone correction image (ndarray) of a rectangle on the image.
   Args:
-    cnt: Contour points (x, y).
-    origImg: Original image of ndarray type.
+    contour: Contour points (x, y).
+    img: Original image of ndarray type.
   Returns:
     Return a Keystone correction image (ndarray).
   """
   # Contour quadrilateral coordinates.
-  rect = _convertContourToRect(cnt)
+  rect = _contourToRect(contour)
 
   # Compute the width of the new image, which will be the maximum distance between bottom-right and bottom-left x-coordiates or the top-right and top-left x-coordinates
   (tl, tr, br, bl) = rect
@@ -199,4 +183,4 @@ def _fourPointTransform(cnt, origImg):
 
   # Compute the perspective transform matrix and then apply it.
   M = cv2.getPerspectiveTransform(rect, dst)
-  return cv2.warpPerspective(origImg, M, (maxWidth, maxHeight))
+  return cv2.warpPerspective(img, M, (maxWidth, maxHeight))

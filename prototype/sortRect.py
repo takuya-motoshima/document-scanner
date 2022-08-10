@@ -25,7 +25,7 @@ def main():
 def drawRect(img, pt1, pt2, color, label, drawTextBackground = True):
   """Draw rectangle with text.
   Args:
-    img: CV2 Image object.
+    img: CV2 Image.
     pt1: The upper left point of the rectangle.
     pt2: The bottom right dot of the rectangle.
     color: Rectangle background color.

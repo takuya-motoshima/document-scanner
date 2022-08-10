@@ -6,7 +6,7 @@ def showImage(title, img):
   """Show image.
   Args:
     title: Display title.
-    img: CV2 Image object.
+    img: CV2 Image.
   """
   # Create a window.
   cv2.namedWindow(title) 

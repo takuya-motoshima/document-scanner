@@ -3,7 +3,7 @@ import cv2
 def resizeImage(img, width=None, height=None, intrpl = cv2.INTER_AREA):
   """Resize the image.
   Args:
-    img: CV2 Image object.
+    img: CV2 Image.
     width: Width after resizing.
     height: Height after resizing.
     intrpl: Interpolation flag that takes one of the following methods.
@@ -13,7 +13,7 @@ def resizeImage(img, width=None, height=None, intrpl = cv2.INTER_AREA):
             cv2.INTER_AREA: resampling using pixel area relation. It may be a preferred method for image decimation, as it gives moire'-free results. But when the image is zoomed, it is similar to the INTER_NEAREST method.
             cv2.INTER_LANCZOS4: Lanczos interpolation over 8x8 neighborhood.
   Returns:
-    Return a resized CV2 Image object.
+    Return a resized CV2 Image.
   """
   resizeRatio = 1
   origWidth, origHeight, _ = img.shape
