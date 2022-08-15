@@ -1,4 +1,3 @@
-from turtle import width
 import cv2
 import numpy as np
 import os
@@ -98,7 +97,12 @@ def _detectDocumentContourPoints(img, debug=False):
     clientBottomRight = DotMap(dict(x = width - padding, y = height - padding))
     clientBottomLeft = DotMap(dict(x = padding, y = height - padding))
     if debug:
-      utils.showImage('Add margins', cv2.rectangle(img.copy(), (padding, padding), (width - padding, height - padding), (255,255,0), 2))
+      utils.showImage('Add margins',
+        cv2.rectangle(img.copy(),
+        (padding, padding),
+        (width - padding, height - padding),
+        (0,255,0),
+        2))
 
   # Grayscale the image.
   grayImg = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)

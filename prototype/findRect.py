@@ -16,7 +16,7 @@ def main():
     approx = cv2.approxPolyDP(contour, 0.005 * peri, True)
     if len(approx) == 4:
       # If it is a rectangle.
-      cv2.drawContours(img, [approx], -1, (0, 255, 0), 3)
+      cv2.drawContours(img, [approx], -1, (0,255,0), 3)
   cv2.imshow('result', img)
   cv2.waitKey(0)
   cv2.destroyAllWindows()
