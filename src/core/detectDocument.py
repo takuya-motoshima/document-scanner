@@ -130,8 +130,8 @@ def _detectDocumentContourPoints(img, debug=False):
   for contour in contours:
     # Approximate the contour.
     peri = cv2.arcLength(contour, True)
-    approx = cv2.approxPolyDP(contour, epsilon=0.1 * peri, closed=True)
-    # approx = cv2.approxPolyDP(contour, epsilon=0.02 * peri, closed=True)
+    approx = cv2.approxPolyDP(contour, epsilon=0.02 * peri, closed=True)
+    # approx = cv2.approxPolyDP(contour, epsilon=0.1 * peri, closed=True)
     # approx = cv2.approxPolyDP(contour, epsilon=0.005 * peri, closed=True)
 
     # Skip if the contour found is not rectangle.
