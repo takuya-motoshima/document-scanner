@@ -1,20 +1,45 @@
 # document-scanner
 Detect documents from images.
 
+Scan Japanese driver's license card:  
+![driver's-license.png](screencaps/driver's-license.png)
+
+Scan Japanese My Number Card:  
+![my-number.png](screencaps/my-number.png)
+
+## Documentation
+* [Changelog](CHANGELOG.md)
+
 ## Requirements
 - Python 3.9 (tested under Python 3.9.10)
+- opencv-python 4.5.5.62
+- opencv-contrib-python 4.5.5.62
+- google-cloud-vision 2.6.3
+- python-dotenv 0.19.2
+- dotmap 1.3.30
 
 ## Installation
-Install dependent packages.
-
+Install dependent packages.  
 ```sh
 python -m pip install --no-cache-dir -r requirements.txt
 # python3.9 -m pip install --no-cache-dir -r requirements.txt
 ```
 
-## Usage
-Use scan.py to scan the document in Python.
+Create an .env file and write your Google Vision credentials as follows.
+```text
+GOOGLE_APPLICATION_CREDENTIALS={"type": "service_account","project_id": "vision-api-288806","private_key_id": "XXX","private_key": "-----BEGIN PRIVATE KEY-----\nXXX","client_email": "XXX","client_id": "XXX","auth_uri": "https://accounts.google.com/o/oauth2/auth","token_uri": "https://oauth2.googleapis.com/token","auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs","client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/XXX"}
+```
 
+## Usage
+Use scan.py to scan the document in Python.  
+
+Aspect ratio of the scanned object:
+|Type|ISO/IEC 7810|Size|
+|--|--|--|
+|Driver's license card|ID-1|85.60 × 53.98 mm|
+|My number card size|ID-1|85.60 × 53.98 mm|
+
+### Scan Help
 ```sh
 python src/scan.py --help
 # Output: usage: scan.py [-h] -i INPUT [-o OUTPUT] [-p] -t {driverslicense,mynumber} [-d]
@@ -30,12 +55,12 @@ python src/scan.py --help
 #           -d, --debug           Display debug image on display
 ```
 
-Scan Japanese driver's license card.
+### Scan Japanese driver's license card.
 ```sh
 python src/scan.py -i img/license.png -t driverslicense --debug
 ```
 
-Scan Japanese My Number Card.
+### Scan Japanese My Number Card.
 ```sh
 python src/scan.py -i img/mynumber.png -t mynumber --debug
 ```
@@ -53,13 +78,6 @@ python -m unittest discover -v tests
 # OK
 ```
 
-## Others
-**Driver's license card size:**  
-ID-1 format. 85.60 x 53.98 mm.
-
-**My number card size:**  
-ID-1 format. 85.60 x 53.98 mm.
-
 ## Author
 **Takuya Motoshima**
 
@@ -68,5 +86,4 @@ ID-1 format. 85.60 x 53.98 mm.
 * [facebook/takuya.motoshima.7](https://www.facebook.com/takuya.motoshima.7)
 
 ## License
-
 [MIT](LICENSE)

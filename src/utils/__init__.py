@@ -12,3 +12,5 @@ from .toBase64 import *
 from .toDataUrl import *
 from .toNdarray import *
 from .writeJson import *
+from .contourToRect import *
+from .fourPointTransform import *
