@@ -1,12 +1,6 @@
 """Binarization Verification
-  Grayscale the image.
-  v
-  Blur the image and remove noise.
-  v
-  Remove white noise. Shrink the white part and dilate the black part.
-
-Examples:
-  python -m prototype.binarization
+  Examples:
+    python -m prototype.binarization
 """
 import cv2
 import numpy as np

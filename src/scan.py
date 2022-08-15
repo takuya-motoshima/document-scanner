@@ -4,7 +4,6 @@ def main():
 
   # Detect document from image.
   dataUrl = core.detectDocument(options)
-  utils.logging.debug(f'dataUrl={dataUrl[:50]}')
   if not dataUrl:
     utils.logging.debug('The document could not be detected from the image')
     exit()

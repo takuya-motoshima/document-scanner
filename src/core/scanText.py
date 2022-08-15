@@ -24,8 +24,6 @@ def scanText(options = dict()):
   # Initialize options.
   options = dict(input = None, type = None, debug = False) | options
   options = DotMap(options)
-  utils.logging.debug(f'options.input={options.input[:50]}')
-  utils.logging.debug(f'options.type={options.type}')
 
   # Validate options.
   _validOptions(options)
@@ -102,9 +100,9 @@ def _detectText(img, mime):
   config = dotenv_values(envPath)
 
   # Find google cloud credentials from ".env".
-  if 'GOOGLE_CREDS' not in config:
-    raise RuntimeError('GOOGLE_CREDS not found in ".env"')
-  creds = json.loads(config['GOOGLE_CREDS'])
+  if 'GOOGLE_APPLICATION_CREDENTIALS' not in config:
+    raise RuntimeError('GOOGLE_APPLICATION_CREDENTIALS not found in ".env"')
+  creds = json.loads(config['GOOGLE_APPLICATION_CREDENTIALS'])
   
   # Loading private key (which contains line terminators like '\n') as an environment variable is tricky. Most shells would pad the terminator and treat it as a literal -- i.e. '\\n'. You will have to inspect how that value gets fed into your Python code, and preprocess/unpad accordingly.
   creds['private_key'] = creds['private_key'].replace('\\n', '\n')
