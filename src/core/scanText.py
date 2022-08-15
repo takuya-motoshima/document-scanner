@@ -10,32 +10,34 @@ from dotmap import DotMap
 import utils
 from pathlib import Path
 
-def scanText(options = dict()):
+def scanText(input, type, debug = False):
   """Scan document.
   Args:
-    options.input: Image path or Data URL.
-    options.type: Document type.
-                'driverslicense': Driver's license card
-                'mynumber': My number card
-    options.debug: Display debug image on display.
+    input: Image path or DataURL.
+    type: Document type.
+          'driverslicense': Driver's license card
+          'mynumber': My number card
+    debug: Display debug image on display.
   Returns:
     Return the text detected from the document.
   """
-  # Initialize options.
-  options = dict(input = None, type = None, debug = False) | options
-  options = DotMap(options)
+  # Validate parameters
+  if (not utils.isDataUrl(input) and
+      not os.path.exists(input) and
+      not os.path.isfile(input)
+  ):
+    raise ValueError('Input is incorrect. Input can be an image path, or DataURL')
+  if type != 'driverslicense' and type != 'mynumber':
+    raise ValueError('Incorrect type. Type can be "driverslicense" or "mynumber"')
 
-  # Validate options.
-  _validOptions(options)
-
-  # load an image.
-  if utils.isDataUrl(options.input):
-    img = utils.toNdarray(options.input)
+  # Load the image.
+  if utils.isDataUrl(input):
+    img = utils.toNdarray(input)
   else:
-    img = cv2.imread(options.input)
+    img = cv2.imread(input)
 
   # Detect text from image.
-  texts = _detectText(img, utils.getMime(options.input))
+  texts = _detectText(img, utils.getMime(input))
   if not texts:
     # Could not find the text in the image.
     utils.logging.debug('Text not found in image')
@@ -45,45 +47,19 @@ def scanText(options = dict()):
   syms = _findRectangleSymbol(texts, img)
 
   # Get annotations.
-  annots = _loadAnnotationXML(options.type)
+  annots = _loadAnnotationXML(type)
 
   # # Show annotation rectangle for debugging.
-  if options.debug:
+  if debug:
     _showAnnotationRectangle(img, annots)
 
   # Find text that inscribes matches the field template rectangle.
   matches = _matching(annots, syms)
 
   # Show detected text rectangles for debugging.
-  if options.debug:
+  if debug:
     _showDetectedTextRectangle(img, matches)
   return matches
-
-def _validOptions(options): 
-  """Validate options.
-  Args:
-    options.input: Image path or Data URL.
-    options.type: Document type.
-                'driverslicense': Driver's license card
-                'mynumber': My number card
-  Raises:
-    ValueError: If there are invalid options
-  """
-  # input option required.
-  if not options.input:
-    raise ValueError('input option required')
-
-  # Input options only allow image path or data URL.
-  if not utils.isDataUrl(options.input) and not os.path.exists(options.input) and os.path.isfile(options.input):
-    raise ValueError(f'{options.input} Image file not found')
-
-  # Document type required.
-  if not options.type:
-    raise ValueError('type option required')
-  
-  # Check if the document type is valid.
-  if options.type != 'driverslicense' and options.type != 'mynumber':
-    raise ValueError('Invalid type. Use \'driverslicense\' or \'mynumber\'')
 
 def _detectText(img, mime):
   """Detect text from image.
@@ -261,7 +237,7 @@ def _showAnnotationRectangle(img, annots):
     cv2.rectangle(tmpImg,
       [round(pt1[0] * width), round(pt1[1] * height)],
       [round(pt2[0] * width), round(pt2[1] * height)],
-      (0,0,255), 3)
+      (0,255,0), 3)
   utils.showImage('Annotation rectangle', tmpImg)
 
 def _showDetectedTextRectangle(img, matches):
@@ -278,5 +254,5 @@ def _showDetectedTextRectangle(img, matches):
     cv2.rectangle(tmpImg,
       [round(match.rect.xmin * width), round(match.rect.ymin * height)],
       [round(match.rect.xmax * width), round(match.rect.ymax * height)],
-      (0,0,255), 3)
+      (0,255,0), 3)
   utils.showImage('Detected text rectangle', tmpImg)

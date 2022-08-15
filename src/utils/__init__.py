@@ -14,3 +14,4 @@ from .toNdarray import *
 from .writeJson import *
 from .contourToRect import *
 from .fourPointTransform import *
+from .isNdarray import *

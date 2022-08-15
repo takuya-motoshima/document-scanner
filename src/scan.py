@@ -3,13 +3,13 @@ def main():
   options = _getCommandOptions()
 
   # Detect document from image.
-  dataUrl = core.detectDocument(options)
+  dataUrl = core.detectDocument(options.input, options.output, options.debug)
   if not dataUrl:
     utils.logging.debug('The document could not be detected from the image')
     exit()
 
   # OCR.
-  matches = core.scanText(dict(input = dataUrl, type = options['type'], debug = options['debug']))
+  matches = core.scanText(dataUrl, options.type, options.debug)
   if not matches:
     utils.logging.debug('The text could not be detected')
     exit()
@@ -32,6 +32,7 @@ if __name__ == '__main__':
   from dotmap import DotMap
   import core
   import utils
+  import cv2
 
   # OCR for ID cards.
   main()

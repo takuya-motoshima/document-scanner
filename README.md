@@ -4,6 +4,12 @@ Detect documents from images.
 Scan Japanese driver's license card:  
 ![driver's-license.png](screencaps/driver's-license.png)
 
+If it is rotating in the roll direction.
+![driver's-license2.png](screencaps/driver's-license2.png)
+
+If it is rotating in the pitch direction:  
+![driver's-license3.png](screencaps/driver's-license3.png)
+
 Scan Japanese My Number Card:  
 ![my-number.png](screencaps/my-number.png)
 
