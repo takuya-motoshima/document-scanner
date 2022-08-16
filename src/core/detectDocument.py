@@ -15,7 +15,7 @@ def detectDocument(input, transformCallback = None):
       string: DataURL of the detected document image.
   """
   # Validate parameters
-  if (utils.isDataUrl(input) and
+  if (not utils.isDataUrl(input) and
       not os.path.exists(input) and
       not os.path.isfile(input)
     ):
