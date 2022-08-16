@@ -1,20 +1,24 @@
 def main():
-  # Get command options.
-  options = _getOptions()
+  try: 
+    # Get command options.
+    options = _getOptions()
 
-  # Detect document from image.
-  dataUrl = core.detectDocument(options.input, _transformCallback(options.debug))
-  if not dataUrl:
-    utils.logging.debug('The document could not be detected from the image')
-    exit()
+    # Detect document from image.
+    dataUrl = core.detectDocument(options.input, _transformCallback(options.debug))
+    if not dataUrl:
+      utils.logging.debug('The document could not be detected from the image')
+      exit()
 
-  # Scanning text.
-  matches = core.scanText(dataUrl, options.type, _transformCallback(options.debug))
-  if not matches:
-    utils.logging.debug('The text could not be detected')
-    exit()
-  for key, match in matches.items():
-    utils.logging.debug(f'{key} -> {match.text}')
+    # Scanning text.
+    matches = core.scanText(dataUrl, options.type, _transformCallback(options.debug))
+    if not matches:
+      utils.logging.debug('The text could not be detected')
+      exit()
+    for key, match in matches.items():
+      utils.logging.debug(f'{key} -> {match.text}')
+  except:
+    utils.logging.exception('')
+    raise
 
 def _transformCallback(debug):
   """Display image.
