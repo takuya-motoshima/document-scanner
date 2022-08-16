@@ -12,10 +12,10 @@ const config = dotenv.parse(fs.readFileSync(envPath, 'utf8'));
 // Find google cloud credentials from ".env".
 if (!('GOOGLE_APPLICATION_CREDENTIALS' in config))
   throw new Error('GOOGLE_APPLICATION_CREDENTIALS not found in ".env"')
-const creds = JSON.parse(config.GOOGLE_APPLICATION_CREDENTIALS);
+const credentials = JSON.parse(config.GOOGLE_APPLICATION_CREDENTIALS);
 
 // Instantiates a client.
-const client = new vision.ImageAnnotatorClient({credentials: creds});
+const client = new vision.ImageAnnotatorClient({credentials});
 
 (async () => {
   const imgPath = '../img/license_only_name_and_birthday.png';

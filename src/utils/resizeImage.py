@@ -15,17 +15,17 @@ def resizeImage(img, width=None, height=None, intrpl = cv2.INTER_AREA):
   Returns:
     Return a resized CV2 Image.
   """
-  resizeRatio = 1
-  origWidth, origHeight, _ = img.shape
+  ratio = 1
+  origWidth, origHeight = img.shape[:2]
   if width is None and height is None:
-    return img, resizeRatio
+    return img, ratio
   elif width is None:
-    resizeRatio = height / origHeight
-    width = int(origWidth * resizeRatio)
-    resizedImg = cv2.resize(img, (height, width), intrpl)
-    return resizedImg, resizeRatio
+    ratio = height / origHeight
+    width = int(origWidth * ratio)
+    resizeImg = cv2.resize(img, (height, width), intrpl)
+    return resizeImg, ratio
   else:
-    resizeRatio = width / origWidth
-    height = int(origHeight * resizeRatio)
-    resizedImg = cv2.resize(img, (height, width), intrpl)
-    return resizedImg, resizeRatio
+    ratio = width / origWidth
+    height = int(origHeight * ratio)
+    resizeImg = cv2.resize(img, (height, width), intrpl)
+    return resizeImg, ratio

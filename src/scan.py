@@ -1,24 +1,37 @@
 def main():
-  # Get command arguments.
-  options = _getCommandOptions()
+  # Get command options.
+  options = _getOptions()
 
   # Detect document from image.
-  dataUrl = core.detectDocument(options.input, options.output, options.debug)
+  dataUrl = core.detectDocument(options.input, _transformCallback(options.debug))
   if not dataUrl:
     utils.logging.debug('The document could not be detected from the image')
     exit()
 
-  # OCR.
-  matches = core.scanText(dataUrl, options.type, options.debug)
+  # Scanning text.
+  matches = core.scanText(dataUrl, options.type, _transformCallback(options.debug))
   if not matches:
     utils.logging.debug('The text could not be detected')
     exit()
   for key, match in matches.items():
     utils.logging.debug(f'{key} -> {match.text}')
 
-def _getCommandOptions():
-  """Get command options.
+def _transformCallback(debug):
+  """Display image.
+  Args:
+      debug (bool): Debug Flag.
+  Returns:
+      function: Image transformation callback function.
   """
+  if not debug:
+    return None
+  return lambda label, img: utils.showImage(label, img)
+
+def _getOptions():
+  """Get command options.
+  Returns:
+      dotmap.DotMap: Command line options.
+  """  
   parser = argparse.ArgumentParser()
   parser.add_argument('-i', '--input', type=str, required=True, help='Image path or Data URL')
   parser.add_argument('-o', '--output', type=str, help='Output image path of the found document')
@@ -32,7 +45,4 @@ if __name__ == '__main__':
   from dotmap import DotMap
   import core
   import utils
-  import cv2
-
-  # OCR for ID cards.
   main()

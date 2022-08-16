@@ -38,7 +38,7 @@ class TestUtils(unittest.TestCase):
         self.assertIsNone(utils.detectDataUrl(case))
   def test_right_toDataUrl(self):
     cases = [
-      ['img/license.png', None],# Correct image path.
+      ['img/driverslicense.png', None],# Correct image path.
       [np.zeros((100, 100, 3)), 'png']# Image of correct ndarray type.
     ]
     for case in cases:
@@ -48,7 +48,7 @@ class TestUtils(unittest.TestCase):
         self.assertRegex(res,  r'^data:..*$')
   def test_right_toDataUrl(self):
     cases = [
-      ['img/license.png', None],# Correct image path.
+      ['img/driverslicense.png', None],# Correct image path.
       [np.zeros((100, 100, 3)), 'png']# Image of correct ndarray type.
     ]
     for case in cases:

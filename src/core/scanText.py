@@ -10,17 +10,18 @@ from dotmap import DotMap
 import utils
 from pathlib import Path
 
-def scanText(input, type, debug = False):
-  """Scan document.
+def scanText(input, type, transformCallback = None):
+  """Scanning text.
   Args:
-    input: Image path or DataURL.
-    type: Document type.
-          'driverslicense': Driver's license card
-          'mynumber': My number card
-    debug: Display debug image on display.
+      input (str): Image path or DataURL.
+      type (str): Document type. (driverslicense: Driver's license card, mynumber: My number card)
+      transformCallback (function, optional): Callback function for image transformation. Defaults to None.
+  Raises:
+      ValueError: The input parameter is incorrect.
+      ValueError: The type parameter is incorrect.
   Returns:
-    Return the text detected from the document.
-  """
+      dict: Text read from the image.
+  """  
   # Validate parameters
   if (not utils.isDataUrl(input) and
       not os.path.exists(input) and
@@ -29,6 +30,10 @@ def scanText(input, type, debug = False):
     raise ValueError('Input is incorrect. Input can be an image path, or DataURL')
   if type != 'driverslicense' and type != 'mynumber':
     raise ValueError('Incorrect type. Type can be "driverslicense" or "mynumber"')
+
+  # Initialize transformation callbacks.
+  if not transformCallback:
+    transformCallback = lambda label, img: None
 
   # Load the image.
   if utils.isDataUrl(input):
@@ -39,52 +44,52 @@ def scanText(input, type, debug = False):
   # Detect text from image.
   texts = _detectText(img, utils.getMime(input))
   if not texts:
-    # Could not find the text in the image.
     utils.logging.debug('Text not found in image')
     return None
 
   # Find the rectangular point of the symbol from the result of document_text_detection.
-  syms = _findRectangleSymbol(texts, img)
+  symbols = _findSymbol(texts, img)
 
   # Get annotations.
-  annots = _loadAnnotationXML(type)
+  annotations = _loadAnnotation(type)
 
-  # # Show annotation rectangle for debugging.
-  if debug:
-    _showAnnotationRectangle(img, annots)
+  # Show annotation rectangle for debugging.
+  _showAnnotationRectangle(img, annotations, transformCallback)
 
   # Find text that inscribes matches the field template rectangle.
-  matches = _matching(annots, syms)
+  matches = _matching(annotations, symbols)
 
   # Show detected text rectangles for debugging.
-  if debug:
-    _showDetectedTextRectangle(img, matches)
+  _showDetectedTextRectangle(img, matches, transformCallback)
   return matches
 
 def _detectText(img, mime):
   """Detect text from image.
   Args:
-    img: CV2 Image.
-    mime: Image MIME type.
-  Returns
-    Returns text detection result.
+      img (numpy.ndarray): CV2 Image.
+      mime (str): Image MIME type.
+  Raises:
+      RuntimeError: Cannot find .env file.
+      RuntimeError: GOOGLE_APPLICATION_CREDENTIALS is not defined in .env.
+  Returns:
+      list: Text detection results.
   """
   # Load .env.
   envPath = './.env';
   if not os.path.exists(envPath):
     raise RuntimeError(f'{envPath} not found')
-  config = dotenv_values(envPath)
+  env = dotenv_values(envPath)
 
   # Find google cloud credentials from ".env".
-  if 'GOOGLE_APPLICATION_CREDENTIALS' not in config:
+  if 'GOOGLE_APPLICATION_CREDENTIALS' not in env:
     raise RuntimeError('GOOGLE_APPLICATION_CREDENTIALS not found in ".env"')
-  creds = json.loads(config['GOOGLE_APPLICATION_CREDENTIALS'])
+  credentials = json.loads(env['GOOGLE_APPLICATION_CREDENTIALS'])
   
   # Loading private key (which contains line terminators like '\n') as an environment variable is tricky. Most shells would pad the terminator and treat it as a literal -- i.e. '\\n'. You will have to inspect how that value gets fed into your Python code, and preprocess/unpad accordingly.
-  creds['private_key'] = creds['private_key'].replace('\\n', '\n')
+  credentials['private_key'] = credentials['private_key'].replace('\\n', '\n')
 
   # Instantiates a client.
-  client = vision.ImageAnnotatorClient(credentials = service_account.Credentials.from_service_account_info(creds))
+  client = vision.ImageAnnotatorClient(credentials = service_account.Credentials.from_service_account_info(credentials))
 
   # Detect text.
   content = cv2.imencode(f'.{mime}', img)[1].tostring()
@@ -102,49 +107,45 @@ def _detectText(img, mime):
   # Returns the text detection result of the first image.
   return res.full_text_annotation.pages[0]
 
-def _findRectangleSymbol(texts, img, ndigits = 3):
+def _findSymbol(texts, img, ndigits = 3):
   """Find the rectangular point of the symbol from the result of document_text_detection.
   Args:
-    texts: Text detection result of document_text_detection.
-    img: CV2 Image.
-    ndigits: Number of decimal places in the ratio of rectangular points.
+      texts (list): Text detection result of document_text_detection.
+      img (numpy.ndarray): CV2 Image.
+      ndigits (int, optional): Number of decimal places in the ratio of rectangular points. Defaults to 3.
   Returns:
-    Returns a symbol rectangle point.
+      list: List of text coordinates.
   """
   # Find the rectangular points of all the symbols.
   height, width, _ = img.shape
-  syms = []
+  symbols = []
   for block in texts.blocks:
     for par in block.paragraphs:
       for word in par.words:
         for sym in word.symbols:
           # Convert the rectangular point of a symbol from px to ratio.
-          syms.append(DotMap(dict(
+          symbols.append(DotMap(dict(
             text = sym.text,
             rect = np.array([[round(pt.x / width, ndigits), round(pt.y / height, ndigits)] for pt in sym.bounding_box.vertices])
           )))  
 
   # Sort the symbol rectangles from top left to bottom right.
-  return sorted(syms, key=lambda sym: np.linalg.norm(np.array((sym.rect[0][0], sym.rect[0][1])) - np.array([0,0])))
+  return sorted(symbols, key=lambda sym: np.linalg.norm(np.array((sym.rect[0][0], sym.rect[0][1])) - np.array([0,0])))
 
-def _loadAnnotationXML(type, ndigits = 3):
+def _loadAnnotation(type, ndigits = 3):
   """Returns the rectangular point of the OCR field.
   Args:
-    type: Document type.
-          'driverslicense': Driver's license card
-          'mynumber': My number card
-    ndigits: Number of decimal places in the ratio of rectangular points.
+      type (str): Document type. (driverslicense: Driver's license card, mynumber: My number card)
+      ndigits (int, optional): _description_. Defaults to 3.
   Returns:
-    Returns a list where the key is the field name and the value is a rectangular point.
-    The points of the rectangle are in the order of upper left, upper right, lower right, lower left.
-  """
+      list: Returns a list where the key is the field name and the value is a rectangular point. The points of the rectangle are in the order of upper left, upper right, lower right, lower left.
+  """  
   # Annotation XML to load.
   srcDir = Path(__file__).resolve().parents[1]
   if type == 'driverslicense':
     xmlPath = f'{srcDir}/annotations/driverslicense.xml'
   elif type == 'mynumber':
     xmlPath = f'{srcDir}/annotations/mynumber.xml'
-  utils.logging.debug(f'Load {xmlPath}')
 
   # Parse XML.
   tree = ET.parse(xmlPath)
@@ -156,7 +157,7 @@ def _loadAnnotationXML(type, ndigits = 3):
   height = float(size.find('height').text)
 
   # Coordinates for each field.
-  annots = []
+  annotations = []
   for obj in root.findall('object'):
     # Convert points from px to ratios.
     bb = obj.find('bndbox')
@@ -166,85 +167,84 @@ def _loadAnnotationXML(type, ndigits = 3):
     ymax = round(float(bb.find('ymax').text) / height, ndigits)
 
     # To rectangular four points.
-    annots.append(DotMap(dict(
+    annotations.append(DotMap(dict(
       name = obj.find('name').text,
       rect = np.array(((xmin, ymin), (xmax, ymin), (xmax, ymax), (xmin, ymax)))
     )))
-  return annots
+  return annotations
 
-def _matching(annots, syms):
+def _matching(annotations, symbols):
   """Find text that inscribes matches the field template rectangle.
   Args:
-    annots: Template annotation.
-    syms: Rectangle point of symbol.
+      annotations (list): Template annotation.
+      symbols (list): Rectangle point of symbol.
   Returns:
-    Returns the found text.
+      dict: Returns the found text.
   """
   # Initialize the return value. (Key is field name, value is rectangular point and text).
-  matches = dict.fromkeys([annot.get('name') for annot in annots], None)
+  matches = dict.fromkeys([annotation.get('name') for annotation in annotations], None)
   for name in matches:
-    matches[name] = DotMap(dict(
-      text = '',
-      rect = dict(xmin = None, ymin = None, xmax = None, ymax = None)
-    ))
+    matches[name] = DotMap(dict(text = '', rect = dict(xmin = None, ymin = None, xmax = None, ymax = None)))
 
   # Read the field coordinates of the template.
-  for annot in annots:
+  for annotation in annotations:
     # Template field rectangle.
-    annotXmin = annot.rect[0][0]
-    annotYmin = annot.rect[0][1]
-    annotXmax = annot.rect[2][0]
-    annotYmax = annot.rect[2][1]
-    for sym in syms:
+    annotationXmin = annotation.rect[0][0]
+    annotationYmin = annotation.rect[0][1]
+    annotationXmax = annotation.rect[2][0]
+    annotationYmax = annotation.rect[2][1]
+    for symbol in symbols:
       # Detected text symbol rectangle.
-      symXmin = sym.rect[0][0]
-      symYmin = sym.rect[0][1]
-      symXmax = sym.rect[2][0]
-      symYmax = sym.rect[2][1]
+      symbolXmin = symbol.rect[0][0]
+      symbolYmin = symbol.rect[0][1]
+      symbolXmax = symbol.rect[2][0]
+      symbolYmax = symbol.rect[2][1]
 
       # Skip if template and symbol do not intersect.
-      iou, interArea, _, symArea = utils.calcIoU(
-        (annotXmin, annotYmin, annotXmax, annotYmax),
-        (symXmin, symYmin, symXmax, symYmax))
+      iou, interArea, _, symbolArea = utils.calcIoU(
+        (annotationXmin, annotationYmin, annotationXmax, annotationYmax),
+        (symbolXmin, symbolYmin, symbolXmax, symbolYmax))
       if iou == 0:
         continue
 
       # Calculate the overlap between the template field and the detected text symbol.
-      ratio = round(interArea / symArea, 3)
+      ratio = round(interArea / symbolArea, 3)
 
       # # Debug template fields and detected text.
-      # utils.logging.debug(f'{annot.name} -> {sym.text} (iou={iou}, ratio={ratio})')
+      # utils.logging.debug(f'{annotation.name} -> {symbol.text} (iou={iou}, ratio={ratio})')
 
       # If the template field and the detection text are inscribed, get that text.
       if ratio > .5:
-        matches[annot.name].text += sym.text
-        matches[annot.name].rect.xmin = symXmin if matches[annot.name].rect.xmin is None or symXmin < matches[annot.name].rect.xmin else matches[annot.name].rect.xmin
-        matches[annot.name].rect.ymin = symYmin if matches[annot.name].rect.ymin is None or symYmin < matches[annot.name].rect.ymin else matches[annot.name].rect.ymin
-        matches[annot.name].rect.xmax = symXmax if matches[annot.name].rect.xmax is None or symXmax > matches[annot.name].rect.xmax else matches[annot.name].rect.xmax
-        matches[annot.name].rect.ymax = symYmax if matches[annot.name].rect.ymax is None or symYmax > matches[annot.name].rect.ymax else matches[annot.name].rect.ymax
+        matches[annotation.name].text += symbol.text
+        matches[annotation.name].rect.xmin = symbolXmin if matches[annotation.name].rect.xmin is None or symbolXmin < matches[annotation.name].rect.xmin else matches[annotation.name].rect.xmin
+        matches[annotation.name].rect.ymin = symbolYmin if matches[annotation.name].rect.ymin is None or symbolYmin < matches[annotation.name].rect.ymin else matches[annotation.name].rect.ymin
+        matches[annotation.name].rect.xmax = symbolXmax if matches[annotation.name].rect.xmax is None or symbolXmax > matches[annotation.name].rect.xmax else matches[annotation.name].rect.xmax
+        matches[annotation.name].rect.ymax = symbolYmax if matches[annotation.name].rect.ymax is None or symbolYmax > matches[annotation.name].rect.ymax else matches[annotation.name].rect.ymax
   return matches
 
-def _showAnnotationRectangle(img, annots):
+def _showAnnotationRectangle(img, annotations, transformCallback):
   """Show annotation rectangle.
   Args:
-    img: CV2 Image.
-    annots: Template annotation.
+      img (numpy.ndarray): CV2 Image.
+      annotations (list): Template annotation.
+      transformCallback (function, optional): Callback function for image transformation.
   """
   tmpImg = img.copy()
   height, width, _ = tmpImg.shape
-  for annot in annots:
-    pt1, _, pt2, _ = annot.rect
+  for annotation in annotations:
+    pt1, _, pt2, _ = annotation.rect
     cv2.rectangle(tmpImg,
       [round(pt1[0] * width), round(pt1[1] * height)],
       [round(pt2[0] * width), round(pt2[1] * height)],
       (0,255,0), 3)
-  utils.showImage('Annotation rectangle', tmpImg)
+  transformCallback('Annotation rectangle', tmpImg)
 
-def _showDetectedTextRectangle(img, matches):
+def _showDetectedTextRectangle(img, matches, transformCallback):
   """Show detected text rectangle.
   Args:
-    img: CV2 Image.
-    matches: Detected text rectangle.
+      img (numpy.ndarray): CV2 Image.
+      matches (dict): Detected text rectangle.
+      transformCallback (function, optional): Callback function for image transformation.
   """
   tmpImg = img.copy()
   height, width, _ = tmpImg.shape
@@ -255,4 +255,4 @@ def _showDetectedTextRectangle(img, matches):
       [round(match.rect.xmin * width), round(match.rect.ymin * height)],
       [round(match.rect.xmax * width), round(match.rect.ymax * height)],
       (0,255,0), 3)
-  utils.showImage('Detected text rectangle', tmpImg)
+  transformCallback('Detected text rectangle', tmpImg)

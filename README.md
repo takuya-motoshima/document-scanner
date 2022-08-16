@@ -2,16 +2,16 @@
 Detect documents from images.
 
 Scan Japanese driver's license card:  
-![driver's-license.png](screencaps/driver's-license.png)
+![driverslicense.png](screencaps/driverslicense.png)
 
 If it is rotating in the roll direction.
-![driver's-license2.png](screencaps/driver's-license2.png)
+![driverslicense2.png](screencaps/driverslicense2.png)
 
 If it is rotating in the pitch direction:  
-![driver's-license3.png](screencaps/driver's-license3.png)
+![driverslicense3.png](screencaps/driverslicense3.png)
 
 Scan Japanese My Number Card:  
-![my-number.png](screencaps/my-number.png)
+![mynumber.png](screencaps/mynumber.png)
 
 ## Documentation
 * [Changelog](CHANGELOG.md)
@@ -63,7 +63,7 @@ python src/scan.py --help
 
 ### Scan Japanese driver's license card.
 ```sh
-python src/scan.py -i img/license.png -t driverslicense --debug
+python src/scan.py -i img/driverslicense.png -t driverslicense --debug
 ```
 
 ### Scan Japanese My Number Card.
