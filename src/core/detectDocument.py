@@ -139,7 +139,6 @@ def detectDocument(input, transformCallback = None):
   else:
     resizeWidth = round(height / (heightRatio / widthRatio))
   warpImg = cv2.resize(warpImg, (resizeWidth, resizeHeight), cv2.INTER_AREA)
-  utils.showImage('Warped', warpImg)
 
   # Returns the DataURL of the image.
   dataUrl, _ = utils.toDataUrl(warpImg, utils.getMime(input))
