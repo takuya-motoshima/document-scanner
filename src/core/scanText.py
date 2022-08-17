@@ -1,15 +1,15 @@
+import os
+import json
+import xml.etree.ElementTree as ET
+from pathlib import Path
+import cv2
+import numpy as np
 from google.cloud import vision
 from google.oauth2 import service_account
 from dotenv import dotenv_values
-import json
-import os
-import cv2
-import numpy as np
-import xml.etree.ElementTree as ET
 from dotmap import DotMap
-import utils
-from pathlib import Path
 from namedivider import NameDivider
+import utils
 
 def scanText(input, type, transformCallback = None):
   """Scanning text.

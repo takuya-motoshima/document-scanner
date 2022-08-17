@@ -3,9 +3,9 @@ import datetime
 def getNow(format = None):
   """Returns the current date and time.
   Args:
-    format: Date and time format. e.g. '%Y%m%d%H%M%S'
+      format (str, optional): Date and time format. e.g. '%Y%m%d%H%M%S'. Defaults to None.
   Returns:
-    Returns the current date and time.
+      str: Returns the current date and time.
   """
   now = datetime.datetime.now()
   if not format:

@@ -5,9 +5,11 @@ from .getExtension import getExtension
 def getMime(str):
   """Get MIME type.
   Args:
-    str: Image Data URL or file path.
+      str (str): Image Data URL or file path.
+  Raises:
+      ValueError: A string without extension was specified.
   Returns:
-    MIME type (e.g. png, jpg).
+      str: MIME type (e.g. png, jpg).
   """
   if isDataUrl(str):
     mime, _ = detectDataUrl(str)
@@ -16,7 +18,6 @@ def getMime(str):
     extension = getExtension(str)
     if not extension:
       raise ValueError('Invalid file path')
-
     # Return MIME type.
     if extension == 'jpg':
       return 'jpeg'

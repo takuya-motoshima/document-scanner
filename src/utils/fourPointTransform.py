@@ -5,10 +5,10 @@ from .contourToRect import contourToRect
 def fourPointTransform(contour, img):
   """Return a Keystone correction image (ndarray) of a rectangle on the image.
   Args:
-    contour: Contour points (x, y).
-    img: Original image of ndarray type.
+      contour (numpy.ndarray): Contour points (x, y).
+      img (numpy.ndarray): CV2 Image.
   Returns:
-    Return a Keystone correction image (ndarray).
+      numpy.ndarray: Return a Keystone correction image.
   """
   # Contour quadrilateral coordinates.
   rect = contourToRect(contour)

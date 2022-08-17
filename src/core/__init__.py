@@ -1,2 +1,2 @@
-from core.detectDocument import detectDocument
-from core.scanText import scanText
+from .detectDocument import *
+from .scanText import *

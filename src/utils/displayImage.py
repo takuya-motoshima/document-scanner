@@ -2,11 +2,11 @@ import cv2
 from importlib import import_module
 import importlib
 
-def showImage(title, img):
-  """Show image.
+def displayImage(title, img):
+  """Display images on the screen.
   Args:
-    title: Display title.
-    img: CV2 Image.
+      title (str): Display title.
+      img (numpy.ndarray): CV2 Image.
   """
   # Create a window.
   cv2.namedWindow(title) 
@@ -25,7 +25,6 @@ def showImage(title, img):
     screenWidth = root.winfo_screenwidth()
     screenHeight = root.winfo_screenheight()
     root.destroy()
-    # print(f'Screen size: {screenWidth}/{screenHeight}')
 
     # Calculates the size and position of the image displayed in the center of the terminal window.
     if height > screenHeight or width > screenWidth:
@@ -39,7 +38,6 @@ def showImage(title, img):
 
     x = round(screenWidth / 2 - (width * multiplier) / 2)
     y = round(screenHeight / 2 - (height * multiplier) / 2)
-    # print(f'Image position: {x}/{y}')
     cv2.moveWindow(title, x, y)
 
   # Show image.

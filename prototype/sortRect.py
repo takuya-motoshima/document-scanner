@@ -3,25 +3,6 @@ import cv2
 import random
 import colorsys
 
-def main():
-  # Create a Blank Image.
-  img = np.zeros((500, 800, 3), np.uint8)
-
-  # Rectangle point list.
-  rects = [randRect(img.shape[1], img.shape[0]) for i in range(10)]
-
-  # Sort the rectangles from top left to bottom right. 
-  # Calculate the distance between the start point and the upper left point of the rectangle with np.linalg.norm.
-  rects = sorted(rects, key=lambda rect: np.linalg.norm(np.array((rect[0][0], rect[0][1])) - np.array([0,0])))
-
-  # debug. Print the coordinates of the rect and draw the rect on the image.
-  for i, rect in enumerate(rects):
-    drawRect(img, rect[0], rect[2], randColor(), str(i), drawTextBackground = False)
-
-  cv2.imshow('sorted', img)
-  cv2.waitKey(0)
-  cv2.destroyAllWindows()
-
 def drawRect(img, pt1, pt2, color, label, drawTextBackground = True):
   """Draw rectangle with text.
   Args:
@@ -76,5 +57,20 @@ def randColor(bright=1):
   val = bright
   return tuple(int(round(c * 255)) for c in colorsys.hsv_to_rgb(hue, sat, val))
 
-if __name__ == '__main__':
-  main()
+# Create a Blank Image.
+img = np.zeros((500, 800, 3), np.uint8)
+
+# Rectangle point list.
+rects = [randRect(img.shape[1], img.shape[0]) for i in range(10)]
+
+# Sort the rectangles from top left to bottom right. 
+# Calculate the distance between the start point and the upper left point of the rectangle with np.linalg.norm.
+rects = sorted(rects, key=lambda rect: np.linalg.norm(np.array((rect[0][0], rect[0][1])) - np.array([0,0])))
+
+# debug. Print the coordinates of the rect and draw the rect on the image.
+for i, rect in enumerate(rects):
+  drawRect(img, rect[0], rect[2], randColor(), str(i), drawTextBackground = False)
+
+cv2.imshow('sorted', img)
+cv2.waitKey(0)
+cv2.destroyAllWindows()

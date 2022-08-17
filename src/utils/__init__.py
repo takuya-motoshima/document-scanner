@@ -7,7 +7,7 @@ from .getNow import *
 from .isDataUrl import *
 from .logger import *
 from .resizeImage import *
-from .showImage import *
+from .displayImage import *
 from .toBase64 import *
 from .toDataUrl import *
 from .toNdarray import *

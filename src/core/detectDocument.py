@@ -1,6 +1,6 @@
+import os
 import cv2
 import numpy as np
-import os
 from dotmap import DotMap
 import utils
 

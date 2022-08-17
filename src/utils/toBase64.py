@@ -6,12 +6,13 @@ from .getMime import getMime
 def toBase64(img, mime = None):
   """Image to base64. 
   Args:
-    img: CV2 Image or image path.
-    mime: The media type of the Data URL. Required if the image is an CV2 Image.
-  Returns:
-    Return base64 and MIME type.
+      img (numpy.ndarray|str): CV2 Image or image path.
+      mime (str, optional): The media type of the Data URL. Required if the image is an CV2 Image. Defaults to None.
   Raises:
-    ValueError: Image types other than png, jpg, jpeg.
+      ValueError: MIME parameters are missing.
+      ValueError: Image parameters are incorrect.
+  Returns:
+      str: Return base64 and MIME type.
   """
   if isinstance(img, np.ndarray):
     # For CV2 Image.

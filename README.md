@@ -38,7 +38,7 @@ GOOGLE_APPLICATION_CREDENTIALS={"type": "service_account","project_id": "vision-
 ```
 
 ## Usage
-Use scan.py to scan the document in Python.  
+Use scan_cli.py to scan the document in Python.  
 
 Aspect ratio of the scanned object:
 |Type|ISO/IEC 7810|Size|
@@ -48,23 +48,19 @@ Aspect ratio of the scanned object:
 
 ### Scan Help
 ```sh
-python src/scan.py --help
-# Output: usage: scan.py [-h] -i INPUT [-o OUTPUT] [-p] -t {driverslicense,mynumber} [-d]
-#         optional arguments:
-#           -h, --help            show this help message and exit
-#           -i INPUT, --input INPUT
-#                                 Image path or Data URL
-#           -o OUTPUT, --output OUTPUT
-#                                 Output image path of the found document
-#           -p, --print           Print the Data URL of the detected document
-#           -t {driverslicense,mynumber}, --type {driverslicense,mynumber}
-#                                 OCR document type
-#           -d, --debug           Display debug image on display
+python src/scan_cli.py --help
+# optional arguments:
+#   -h, --help            show this help message and exit
+#   -i INPUT, --input INPUT
+#                         Image path or Data URL
+#   -t {driverslicense,mynumber}, --type {driverslicense,mynumber}
+#                         OCR document type
+#   -d, --debug           Display debug image on display
 ```
 
 ### Scan Japanese driver's license card.
 ```sh
-python src/scan.py -i img/driverslicense.png -t driverslicense --debug
+python src/scan_cli.py -i img/driverslicense.png -t driverslicense --debug
 # Result:
 # fullName -> 日本花子
 # birthday -> 昭和61年5月1日生
@@ -77,7 +73,7 @@ python src/scan.py -i img/driverslicense.png -t driverslicense --debug
 
 ### Scan Japanese My Number Card.
 ```sh
-python src/scan.py -i img/mynumber.png -t mynumber --debug
+python src/scan_cli.py -i img/mynumber.png -t mynumber --debug
 # Result:
 # fullName -> 番号花子
 # address -> 東京都千代田区霞が関2-1-2
@@ -92,14 +88,6 @@ python src/scan.py -i img/mynumber.png -t mynumber --debug
 ## Unit test
 ```sh
 python -m unittest discover -v tests
-# test_right_for_detect_data_url (test_utils.TestUtils) ... ok
-# test_right_for_to_data_url (test_utils.TestUtils) ... ok
-# test_wrong_for_detect_data_url (test_utils.TestUtils) ... ok
-# 
-# ----------------------------------------------------------------------
-# Ran 3 tests in 0.004s
-# 
-# OK
 ```
 
 ## Author

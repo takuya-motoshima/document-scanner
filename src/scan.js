@@ -17,12 +17,10 @@ function validateImg(val) {
     const mime = matches[1];
     if (mime !== 'image/png' && mime !== 'image/jpeg')
       throw new commander.InvalidArgumentError('Unsupported media type, Images can process PNG or JPG');
-  } else {
-    if (!fs.existsSync(val))
-      throw new commander.InvalidArgumentError('File path not found');
-    else if (!fs.lstatSync(val).isFile())
-      throw new commander.InvalidArgumentError('It\'s not a file path');
-  }
+  } else if (!fs.existsSync(val))
+    throw new commander.InvalidArgumentError('File path not found');
+  else if (!fs.lstatSync(val).isFile())
+    throw new commander.InvalidArgumentError('It\'s not a file path');
   return val;
 }
 
@@ -60,20 +58,24 @@ function validateType(val) {
 program
   .description('Scan document from image')
   .requiredOption('-i, --input <string>', 'Image path or Data URL', validateImg)
-  .option('-o, --output <string>', 'Output image path of the found document')
-  // .option('-r, --aspect <string>', 'Resize the scanned document to the specified aspect ratio. Typing as a width:height ratio (like 4:5 or 1.618:1).', validateAspectRatio)
   .requiredOption('-t, --type <string>', 'OCR document type. \'driverslicense\' or \'mynumber\' can be used', validateType)
   .option('-d, --debug', 'Display debug image on display', false)
+  // .option('-o, --output <string>', 'Output image path of the found document')
+  // .option('-r, --aspect <string>', 'Resize the scanned document to the specified aspect ratio. Typing as a width:height ratio (like 4:5 or 1.618:1).', validateAspectRatio)
   .parse();
 const options = program.opts();
 
 // Generate command arguments.
 const args = [
-  '-i', options.input,
+  '-i',
+  options.input,
   '-p',
-  '-t', options.type];
-if (options.output)
-  args.push('-o', options.output);
+  '-t',
+  options.type];
+
+// Set optional parameters.
+// if (options.output)
+//   args.push('-o', options.output);
 // if (options.aspect)
 //   args.push('-r', options.aspect);
 if (options.debug)

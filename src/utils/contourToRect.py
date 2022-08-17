@@ -4,9 +4,9 @@ from dotmap import DotMap
 def contourToRect(contour):
   """Convert contour points (x, y) to four external rectangle points (x, y).
   Args:
-    contour: Contour points (x, y).
+      contour (numpy.ndarray): Contour points (x, y).
   Returns:
-    List of vertex coordinates (x, y).
+      list: List of vertex coordinates (x, y).
   """
   # Initialzie a list of coordinates that will be ordered such that the first entry in the list is the top-left, the second entry is the top-right, the third is the bottom-right, and the fourth is the bottom-left.
   points = contour.reshape(4, 2)

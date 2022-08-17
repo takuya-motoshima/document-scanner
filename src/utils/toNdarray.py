@@ -4,12 +4,12 @@ import base64
 from urllib import request
 from .isDataUrl import isDataUrl
 
-def toNdarray(str): 
-  """Image to Data URL.
+def toNdarray(str):
+  """Image to ndarray.
   Args:
-    img: Image Data URL or image base64.
+      str (str): Image Data URL or image base64.
   Returns:
-    Return CV2 Image.
+      numpy.ndarray: CV2 Image.
   """
   if isDataUrl(str):
     # For Data URL.

@@ -3,10 +3,10 @@ from .calcIoU import calcIoU
 def calcGIoU(rectA, rectB):
   """Calculate GIoU for two rectangles.
   Args:
-    rectA: Rectangular bounding box ([top left X, top left Y, bottom right X, bottom right Y]).
-    rectB: Rectangular bounding box ([top left X, top left Y, bottom right X, bottom right Y]).
+      rectA (list): Rectangular bounding box ([top left X, top left Y, bottom right X, bottom right Y]).
+      rectB (list): Rectangular bounding box ([top left X, top left Y, bottom right X, bottom right Y]).
   Returns:
-    Returns GIoU, intersection area, rectangle A area, and rectangle B area.
+      tuple: Returns GIoU, intersection area, rectangle A area, and rectangle B area.
   """
   # Top left X, top left Y, bottom right X, bottom right Y of rectangle A.
   aXmin, aYmin, aXmax, aYmax = rectA

@@ -1,5 +1,5 @@
-import unittest
 import numpy as np
+import unittest
 import src.utils as utils
 
 class TestUtils(unittest.TestCase):
