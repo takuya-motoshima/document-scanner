@@ -1,6 +1,6 @@
 {
   "name": "document-scanner",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "Detect documents from images.",
   "main": "index.js",
   "scripts": {
