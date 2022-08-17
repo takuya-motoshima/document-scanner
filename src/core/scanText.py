@@ -9,6 +9,7 @@ import xml.etree.ElementTree as ET
 from dotmap import DotMap
 import utils
 from pathlib import Path
+from namedivider import NameDivider
 
 def scanText(input, type, transformCallback = None):
   """Scanning text.
@@ -20,7 +21,7 @@ def scanText(input, type, transformCallback = None):
       ValueError: The input parameter is incorrect.
       ValueError: The type parameter is incorrect.
   Returns:
-      dict: Text read from the image.
+      dotmap.DotMap: Text read from the image.
   """  
   # Validate parameters
   if (not utils.isDataUrl(input) and
@@ -52,15 +53,17 @@ def scanText(input, type, transformCallback = None):
 
   # Get annotations.
   annotations = _loadAnnotation(type)
-
-  # Show annotation rectangle for debugging.
-  _showAnnotationRectangle(img, annotations, transformCallback)
+  transformCallback('Annotation rectangle', _drawAnnotationRectangle(img, annotations))
 
   # Find text that inscribes matches the field template rectangle.
   matches = _matching(annotations, symbols)
+  transformCallback('Detected text rectangle', _drawDetectionTextRectangle(img, matches))
 
-  # Show detected text rectangles for debugging.
-  _showDetectedTextRectangle(img, matches, transformCallback)
+  # If there is a first name and last name, split the first name and last name.
+  if (type == 'driverslicense' or type == 'mynumber') and matches['fullName']:
+    divideName = NameDivider().divide_name(matches.fullName.text)
+    matches.firstName = DotMap(text = divideName.given)
+    matches.lastName = DotMap(text = divideName.family)
   return matches
 
 def _detectText(img, mime):
@@ -124,10 +127,10 @@ def _findSymbol(texts, img, ndigits = 3):
       for word in par.words:
         for sym in word.symbols:
           # Convert the rectangular point of a symbol from px to ratio.
-          symbols.append(DotMap(dict(
+          symbols.append(DotMap(
             text = sym.text,
             rect = np.array([[round(pt.x / width, ndigits), round(pt.y / height, ndigits)] for pt in sym.bounding_box.vertices])
-          )))  
+          ))
 
   # Sort the symbol rectangles from top left to bottom right.
   return sorted(symbols, key=lambda sym: np.linalg.norm(np.array((sym.rect[0][0], sym.rect[0][1])) - np.array([0,0])))
@@ -167,24 +170,27 @@ def _loadAnnotation(type, ndigits = 3):
     ymax = round(float(bb.find('ymax').text) / height, ndigits)
 
     # To rectangular four points.
-    annotations.append(DotMap(dict(
+    annotations.append(DotMap(
       name = obj.find('name').text,
       rect = np.array(((xmin, ymin), (xmax, ymin), (xmax, ymax), (xmin, ymax)))
-    )))
+    ))
   return annotations
 
-def _matching(annotations, symbols):
+def _matching(annotations, symbols, ):
   """Find text that inscribes matches the field template rectangle.
   Args:
       annotations (list): Template annotation.
       symbols (list): Rectangle point of symbol.
   Returns:
-      dict: Returns the found text.
+      dotmap.DotMap: Returns the found text.
   """
   # Initialize the return value. (Key is field name, value is rectangular point and text).
-  matches = dict.fromkeys([annotation.get('name') for annotation in annotations], None)
+  matches = DotMap.fromkeys([annotation.get('name') for annotation in annotations])
   for name in matches:
-    matches[name] = DotMap(dict(text = '', rect = dict(xmin = None, ymin = None, xmax = None, ymax = None)))
+    matches[name] = DotMap(text = '', rect = DotMap(xmin = None, ymin = None, xmax = None, ymax = None))
+
+  # Annotation and text overlap rate threshold.
+  thresholdRateOfOverlap = .5
 
   # Read the field coordinates of the template.
   for annotation in annotations:
@@ -213,21 +219,23 @@ def _matching(annotations, symbols):
       # # Debug template fields and detected text.
       # utils.logging.debug(f'{annotation.name} -> {symbol.text} (iou={iou}, ratio={ratio})')
 
-      # If the template field and the detection text are inscribed, get that text.
-      if ratio > .5:
-        matches[annotation.name].text += symbol.text
-        matches[annotation.name].rect.xmin = symbolXmin if matches[annotation.name].rect.xmin is None or symbolXmin < matches[annotation.name].rect.xmin else matches[annotation.name].rect.xmin
-        matches[annotation.name].rect.ymin = symbolYmin if matches[annotation.name].rect.ymin is None or symbolYmin < matches[annotation.name].rect.ymin else matches[annotation.name].rect.ymin
-        matches[annotation.name].rect.xmax = symbolXmax if matches[annotation.name].rect.xmax is None or symbolXmax > matches[annotation.name].rect.xmax else matches[annotation.name].rect.xmax
-        matches[annotation.name].rect.ymax = symbolYmax if matches[annotation.name].rect.ymax is None or symbolYmax > matches[annotation.name].rect.ymax else matches[annotation.name].rect.ymax
+      # If the overlap rate between the template and the text is less than a certain value, the text is not retrieved.
+      if ratio < thresholdRateOfOverlap:
+        continue
+      matches[annotation.name].text += symbol.text
+      matches[annotation.name].rect.xmin = symbolXmin if matches[annotation.name].rect.xmin is None or symbolXmin < matches[annotation.name].rect.xmin else matches[annotation.name].rect.xmin
+      matches[annotation.name].rect.ymin = symbolYmin if matches[annotation.name].rect.ymin is None or symbolYmin < matches[annotation.name].rect.ymin else matches[annotation.name].rect.ymin
+      matches[annotation.name].rect.xmax = symbolXmax if matches[annotation.name].rect.xmax is None or symbolXmax > matches[annotation.name].rect.xmax else matches[annotation.name].rect.xmax
+      matches[annotation.name].rect.ymax = symbolYmax if matches[annotation.name].rect.ymax is None or symbolYmax > matches[annotation.name].rect.ymax else matches[annotation.name].rect.ymax
   return matches
 
-def _showAnnotationRectangle(img, annotations, transformCallback):
-  """Show annotation rectangle.
+def _drawAnnotationRectangle(img, annotations):
+  """Draw annotation rectangle.
   Args:
       img (numpy.ndarray): CV2 Image.
       annotations (list): Template annotation.
-      transformCallback (function, optional): Callback function for image transformation.
+  Returns:
+      numpy.ndarray: CV2 Image.
   """
   tmpImg = img.copy()
   height, width, _ = tmpImg.shape
@@ -237,14 +245,15 @@ def _showAnnotationRectangle(img, annotations, transformCallback):
       [round(pt1[0] * width), round(pt1[1] * height)],
       [round(pt2[0] * width), round(pt2[1] * height)],
       (0,255,0), 3)
-  transformCallback('Annotation rectangle', tmpImg)
+  return tmpImg
 
-def _showDetectedTextRectangle(img, matches, transformCallback):
-  """Show detected text rectangle.
+def _drawDetectionTextRectangle(img, matches):
+  """Drawing detection text rectangle.
   Args:
       img (numpy.ndarray): CV2 Image.
       matches (dict): Detected text rectangle.
-      transformCallback (function, optional): Callback function for image transformation.
+  Returns:
+      numpy.ndarray: CV2 Image.
   """
   tmpImg = img.copy()
   height, width, _ = tmpImg.shape
@@ -255,4 +264,4 @@ def _showDetectedTextRectangle(img, matches, transformCallback):
       [round(match.rect.xmin * width), round(match.rect.ymin * height)],
       [round(match.rect.xmax * width), round(match.rect.ymax * height)],
       (0,255,0), 3)
-  transformCallback('Detected text rectangle', tmpImg)
+  return tmpImg

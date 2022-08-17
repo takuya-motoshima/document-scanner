@@ -49,10 +49,10 @@ def detectDocument(input, transformCallback = None):
   # The image rendering area excluding the margins.
   height, width = borderedImg.shape[:2]
   clientRect = [
-    DotMap(dict(x = padding, y = padding)),
-    DotMap(dict(x = width - padding, y = padding)),
-    DotMap(dict(x = width - padding, y = height - padding)),
-    DotMap(dict(x = padding, y = height - padding))
+    DotMap(x = padding, y = padding),
+    DotMap(x = width - padding, y = padding),
+    DotMap(x = width - padding, y = height - padding),
+    DotMap(x = padding, y = height - padding)
   ]
   transformCallback('Bordered', cv2.rectangle(borderedImg.copy(), (clientRect[0].x, clientRect[0].y), (clientRect[2].x, clientRect[2].y), (0,255,0), 2))
     

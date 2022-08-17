@@ -23,6 +23,7 @@ Scan Japanese My Number Card:
 - google-cloud-vision 2.6.3
 - python-dotenv 0.19.2
 - dotmap 1.3.30
+- namedivider-python 0.1.0
 
 ## Installation
 Install dependent packages.  
@@ -64,11 +65,28 @@ python src/scan.py --help
 ### Scan Japanese driver's license card.
 ```sh
 python src/scan.py -i img/driverslicense.png -t driverslicense --debug
+# Result:
+# fullName -> 日本花子
+# birthday -> 昭和61年5月1日生
+# address -> 東京都千代田区霞が関2-1-2
+# expiryDate -> 2024年(令和06年)06月01日まで有効
+# licenseNumber -> 012345678900
+# firstName -> 花子
+# lastName -> 日本
 ```
 
 ### Scan Japanese My Number Card.
 ```sh
 python src/scan.py -i img/mynumber.png -t mynumber --debug
+# Result:
+# fullName -> 番号花子
+# address -> 東京都千代田区霞が関2-1-2
+# birthday -> 平成元年3月31日生
+# cardExpiryDate -> 2025年3月31日まで有効
+# digiExpiryDate -> 2020年3月31日
+# gender -> 女
+# firstName -> 子
+# lastName -> 番号花
 ```
 
 ## Unit test

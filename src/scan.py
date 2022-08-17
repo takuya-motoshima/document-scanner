@@ -7,13 +7,13 @@ def main():
     dataUrl = core.detectDocument(options.input, _transformCallback(options.debug))
     if not dataUrl:
       utils.logging.debug('The document could not be detected from the image')
-      exit()
+      sys.exit()
 
     # Scanning text.
     matches = core.scanText(dataUrl, options.type, _transformCallback(options.debug))
     if not matches:
       utils.logging.debug('The text could not be detected')
-      exit()
+      sys.exit()
     for key, match in matches.items():
       utils.logging.debug(f'{key} -> {match.text}')
   except:
@@ -49,4 +49,5 @@ if __name__ == '__main__':
   from dotmap import DotMap
   import core
   import utils
+  import sys
   main()

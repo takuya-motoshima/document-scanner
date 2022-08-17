@@ -23,7 +23,7 @@ def contourToRect(contour):
   rect[3] = points[np.argmax(diff)]# Bottom left coordinates.a
 
   # Convert to dict ([n][0] as x, [n][1] as y).
-  rect = list(map(lambda item: DotMap(dict(zip(['x', 'y'], item))), rect))
+  rect = list(map(lambda item: DotMap(zip(['x', 'y'], item)), rect))
 
   # Return the rectangle coordinates of the contour.
   return rect
