@@ -7,6 +7,9 @@ def main():
   # parser.add_argument('-o', '--output', type=str, help='Output image path of the found document')
   # parser.add_argument('-p', '--print', action='store_true', help='Print the Data URL of the detected document', default=False)
   options = DotMap(vars(parser.parse_args()))
+  # utils.logging.debug(f'options.input={options.input}')
+  # utils.logging.debug(f'options.type={options.type}')
+  # utils.logging.debug(f'options.debug={options.debug}')
 
   # When debug mode is on, the converted images are received sequentially and displayed on the screen.
   transformCallback = None
@@ -15,15 +18,15 @@ def main():
 
   # Scan text from a document.
   matches = scan(options.input, options.type, transformCallback)
-  if not matches:
-    utils.logging.debug('The text could not be detected')
-    sys.exit()
-  for key, match in matches.items():
-    utils.logging.debug(f'{key} -> {match.text}')
+
+  # The detected text is returned as JSON.
+  matchesJson = json.dumps({key: match.text for key, match in matches.items()}, ensure_ascii=False, indent = 4)
+  utils.logging.debug(matchesJson)
+  print(matchesJson)
 
 if __name__ == '__main__':
-  import sys
   import argparse
+  import json
   from dotmap import DotMap
   from scan import scan
   import utils

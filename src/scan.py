@@ -1,5 +1,5 @@
 import os
-import sys
+from dotmap import DotMap
 import core
 import utils
 
@@ -31,7 +31,7 @@ def scan(input, type, transformCallback = None):
     dataUrl = core.detectDocument(input, transformCallback)
     if not dataUrl:
       utils.logging.debug('The document could not be detected from the image')
-      sys.exit()
+      return DotMap()
 
     # Scanning text.
     return core.scanText(dataUrl, type, transformCallback)

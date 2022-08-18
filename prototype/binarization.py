@@ -5,7 +5,7 @@ from pathlib import Path
 import src.utils as utils
 
 # Load the image.
-imgDir = f'{Path(__file__).resolve().parents[1]}/img'
+imgDir = f'{Path(__file__).parents[1]}/img'
 img = cv2.imread(f'{imgDir}/tmp.jpg')
 
 # Grayscale the image.

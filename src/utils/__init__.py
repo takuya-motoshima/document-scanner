@@ -15,3 +15,6 @@ from .writeJson import *
 from .contourToRect import *
 from .fourPointTransform import *
 from .isNdarray import *
+from .cleanupJapaneseCalendarBirthday import *
+from .cleanupJapaneseCalendarExpirationDate import *
+from .validateDate import *

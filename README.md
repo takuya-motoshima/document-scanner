@@ -1,5 +1,5 @@
 # document-scanner
-Detect documents from images.
+Scan the text of a document.
 
 Scan Japanese driver's license card:  
 ![driverslicense.png](screencaps/driverslicense.png)
@@ -34,7 +34,7 @@ python -m pip install --no-cache-dir -r requirements.txt
 
 Create an .env file and write your Google Vision credentials as follows.
 ```text
-GOOGLE_APPLICATION_CREDENTIALS={"type": "service_account","project_id": "vision-api-288806","private_key_id": "XXX","private_key": "-----BEGIN PRIVATE KEY-----\nXXX","client_email": "XXX","client_id": "XXX","auth_uri": "https://accounts.google.com/o/oauth2/auth","token_uri": "https://oauth2.googleapis.com/token","auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs","client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/XXX"}
+GOOGLE_APPLICATION_CREDENTIALS={"type": "service_account","project_id": "XXX","private_key_id": "XXX","private_key": "-----BEGIN PRIVATE KEY-----\nXXX","client_email": "XXX","client_id": "XXX","auth_uri": "https://accounts.google.com/o/oauth2/auth","token_uri": "https://oauth2.googleapis.com/token","auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs","client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/XXX"}
 ```
 
 ## Usage
@@ -62,27 +62,31 @@ python src/scan_cli.py --help
 ```sh
 python src/scan_cli.py -i img/driverslicense.png -t driverslicense --debug
 # Result:
-# fullName -> 日本花子
-# birthday -> 昭和61年5月1日生
-# address -> 東京都千代田区霞が関2-1-2
-# expiryDate -> 2024年(令和06年)06月01日まで有効
-# licenseNumber -> 012345678900
-# firstName -> 花子
-# lastName -> 日本
+# {
+#     "fullName": "日本花子",
+#     "birthday": "昭和61年5月1日生",
+#     "address": "東京都千代田区霞が関2-1-2",
+#     "expiryDate": "2024年(令和06年)06月01日まで有効",
+#     "licenseNumber": "012345678900",
+#     "firstName": "花子",
+#     "lastName": "日本"
+# }
 ```
 
 ### Scan Japanese My Number Card.
 ```sh
 python src/scan_cli.py -i img/mynumber.png -t mynumber --debug
 # Result:
-# fullName -> 番号花子
-# address -> 東京都千代田区霞が関2-1-2
-# birthday -> 平成元年3月31日生
-# cardExpiryDate -> 2025年3月31日まで有効
-# digiExpiryDate -> 2020年3月31日
-# gender -> 女
-# firstName -> 子
-# lastName -> 番号花
+# {
+#     "fullName": "番号花子",
+#     "address": "東京都千代田区霞が関2-1-2",
+#     "birthday": "平成元年3月31日生",
+#     "cardExpiryDate": "2025年3月31日まで有効",
+#     "digiExpiryDate": "2020年3月31日",
+#     "gender": "女",
+#     "firstName": "花子",
+#     "lastName": "番号"
+# }
 ```
 
 ## Unit test

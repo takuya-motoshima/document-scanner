@@ -4,3 +4,6 @@ logs/*
 !logs/
 !.gitkeep
 .env
+web-demo/.env
+web-demo/logs/*
+!web-demo/logs/

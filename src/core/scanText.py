@@ -46,7 +46,7 @@ def scanText(input, type, transformCallback = None):
   texts = _detectText(img, utils.getMime(input))
   if not texts:
     utils.logging.debug('Text not found in image')
-    return None
+    return DotMap()
 
   # Find the rectangular point of the symbol from the result of document_text_detection.
   symbols = _findSymbol(texts, img)
@@ -59,11 +59,27 @@ def scanText(input, type, transformCallback = None):
   matches = _matching(annotations, symbols)
   transformCallback('Detected text rectangle', _drawDetectionTextRectangle(img, matches))
 
-  # If there is a first name and last name, split the first name and last name.
-  if (type == 'driverslicense' or type == 'mynumber') and matches['fullName']:
-    divideName = NameDivider().divide_name(matches.fullName.text)
-    matches.firstName = DotMap(text = divideName.given)
-    matches.lastName = DotMap(text = divideName.family)
+  # If a driver's license or my number card.
+  if type == 'driverslicense' or type == 'mynumber':
+    # If there is a first name and last name, split the first name and last name.
+    firstName = ''
+    lastName = ''
+    if matches['fullName']:
+      divideName = NameDivider().divide_name(matches.fullName.text)
+      firstName = divideName.given
+      lastName = divideName.family
+    matches.firstName = DotMap(text = firstName)
+    matches.lastName = DotMap(text = lastName)
+
+    # Clean up the Japanese calendar birthdays.
+    matches.birthday.text = utils.cleanupJapaneseCalendarBirthday(matches.birthday.text)
+
+    # Clean up the expiration date.
+    if type == 'driverslicense':
+      matches.expiryDate.text = utils.cleanupJapaneseCalendarExpirationDate(matches.expiryDate.text)
+    else:
+      matches.cardExpiryDate.text = utils.cleanupJapaneseCalendarExpirationDate(matches.cardExpiryDate.text)
+      matches.digiExpiryDate.text = utils.cleanupJapaneseCalendarExpirationDate(matches.digiExpiryDate.text)
   return matches
 
 def _detectText(img, mime):
@@ -78,7 +94,8 @@ def _detectText(img, mime):
       list: Text detection results.
   """
   # Load .env.
-  envPath = './.env';
+  envDir = Path(__file__).parents[2]
+  envPath = f'{envDir}/.env';
   if not os.path.exists(envPath):
     raise RuntimeError(f'{envPath} not found')
   env = dotenv_values(envPath)
@@ -144,7 +161,7 @@ def _loadAnnotation(type, ndigits = 3):
       list: Returns a list where the key is the field name and the value is a rectangular point. The points of the rectangle are in the order of upper left, upper right, lower right, lower left.
   """  
   # Annotation XML to load.
-  srcDir = Path(__file__).resolve().parents[1]
+  srcDir = Path(__file__).parents[1]
   if type == 'driverslicense':
     xmlPath = f'{srcDir}/annotations/driverslicense.xml'
   elif type == 'mynumber':
