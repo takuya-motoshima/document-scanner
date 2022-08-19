@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [1.0.9] - 2022-08-19
+### Fixed
+- Added web demo of underage checks.
+
 ## [1.0.8] - 2022-08-19
 ### Fixed
 - Age added to driver's license office and my number card scan results.
@@ -45,3 +49,4 @@ All notable changes to this project will be documented in this file.
 [1.0.6]: https://github.com/takuya-motoshima/document-scanner/compare/v1.0.5...v1.0.6
 [1.0.7]: https://github.com/takuya-motoshima/document-scanner/compare/v1.0.6...v1.0.7
 [1.0.8]: https://github.com/takuya-motoshima/document-scanner/compare/v1.0.7...v1.0.8
+[1.0.9]: https://github.com/takuya-motoshima/document-scanner/compare/v1.0.8...v1.0.9

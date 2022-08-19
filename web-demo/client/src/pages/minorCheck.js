@@ -25,30 +25,6 @@ async function getImageAsDataURL(resizeWidth = 480) {
   return canvas.toDataURL('image/png', 1);
 }
 
-/**
- * Calculate age.
- */
-function calcAge(birthday) {
-  // Date of birth.
-  const dateOfBirth = moment(birthday);
-
-  // Today's Date
-  const today = moment(new Date());
-
-  // Calculate age by comparing western calendar years
-  let baseAge = today.year() - dateOfBirth.year();
-
-  // Created birthdays.
-  birthday = moment(new Date(today.year() + "-" + (dateOfBirth.month() + 1) + "-" + dateOfBirth.date()));
-
-  // If today is a date before the birthday, returns -1 from the calculated age
-  if (today.isBefore(birthday))
-    return baseAge - 1;
-
-  // Today is the birthday or if it is past the birthday, the calculated age is returned
-  return baseAge;
-}
-
 // API.
 const minorCheckApi = new MinorCheckApi();
 
@@ -81,20 +57,23 @@ $('body')
 
       // Perform OCR.
       const {data} = await minorCheckApi.minorCheck(type, await getImageAsDataURL());
+      console.log('data=', data);
 
       // Hide the loading indicator.
       blockUI.release();
 
+      // Response age to int.
+      const age = parseInt(data.age, 10);
+
       // If the birthdays is not taken, show the error message.
-      if (!data.wrnBirthday || data.wrnBirthday.length !== 8)
+      if (!age)
         return void await Dialog.warning('画像から生年月日を読み取れませんでした');
 
       // Calculate age.
-      const age = calcAge(data.wrnBirthday);
       if (age >= 20)
-        await Dialog.success(`年齢は${age}歳で、未成年ではありません`);
+        await Dialog.success(null, `年齢は${age}歳で、未成年ではありません`);
       else
-        await Dialog.error(`年齢は${age}歳で、未成年です`);
+        await Dialog.error(null, `年齢は${age}歳で、未成年です`);
     } catch (err) {
       // Hide the loading indicator.
       blockUI.release();
@@ -109,7 +88,7 @@ $('body')
     const type = ref.type.filter(':checked').val();
 
     // After changing the type, set the image to its initial state.
-    if (type === 'lic')
+    if (type === 'driverslicense')
       ref.image.attr('src', '/build/media/driverslicense.png');
     else
       ref.image.attr('src', '/build/media/mynumber.png');

@@ -60,7 +60,7 @@ $('body')
 
       // Perform OCR.
       const {data} = await ocrApi.ocr(type, await getImageAsDataURL());
-      console.log('data=', data);
+      // console.log('data=', data);
 
       // Show the results on the screen.
       if (type === 'driverslicense') {

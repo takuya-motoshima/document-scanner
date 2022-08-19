@@ -15,11 +15,12 @@ sys.path.append(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
 import utils
 from normalize_japanese_addresses import normalize
 
-def scanText(input, type, transformCallback = None):
+def scanText(input, type, fields = None, transformCallback = None):
   """Scanning text.
   Args:
       input (str): Image path or DataURL.
       type (str): Document type. (driverslicense: Driver's license card, mynumber: My number card)
+      fields (list, optional): Fields to be scanned. Defaults to None(all fields).
       transformCallback (function, optional): Callback function for image transformation. Defaults to None.
   Raises:
       ValueError: The input parameter is incorrect.
@@ -35,6 +36,10 @@ def scanText(input, type, transformCallback = None):
     raise ValueError('Input is incorrect. Input can be an image path, or DataURL')
   if type != 'driverslicense' and type != 'mynumber':
     raise ValueError('Incorrect type. Type can be "driverslicense" or "mynumber"')
+
+  # If the scan item has age, add the date of birth to the scan item because the calculation of age requires the date of birth.
+  if fields and 'age' in fields and 'birthday' not in fields:
+    fields.append('birthday')
 
   # Initialize transformation callbacks.
   if not transformCallback:
@@ -56,7 +61,7 @@ def scanText(input, type, transformCallback = None):
   symbols = _findSymbol(texts, img)
 
   # Get annotations.
-  annotations = _loadAnnotation(type)
+  annotations = _loadAnnotation(type, fields)
   transformCallback('Annotation rectangle', _drawAnnotationRectangle(img, annotations))
 
   # Find text that inscribes matches the field template rectangle.
@@ -65,47 +70,52 @@ def scanText(input, type, transformCallback = None):
 
   # If a driver's license or my number card.
   if type == 'driverslicense' or type == 'mynumber':
-    # If there is a first name and last name, split the first name and last name.
-    matches.firstName = DotMap(text = '')
-    matches.lastName = DotMap(text = '')
-    if matches.fullName.text:
-      divideName = NameDivider().divide_name(matches.fullName.text)
-      matches.firstName.text = divideName.given
-      matches.lastName.text = divideName.family
+    if 'fullName' in matches:
+      # If there is a first name and last name, split the first name and last name.
+      matches.firstName = DotMap(text = '')
+      matches.lastName = DotMap(text = '')
+      if matches.fullName.text:
+        divideName = NameDivider().divide_name(matches.fullName.text)
+        matches.firstName.text = divideName.given
+        matches.lastName.text = divideName.family
 
-    # Clean up the Japanese calendar birthdays.
-    matches.birthday.text = utils.cleanupJapaneseCalendarBirthday(matches.birthday.text)
+    if 'birthday' in matches:
+      # Clean up the Japanese calendar birthdays.
+      matches.birthday.text = utils.cleanupJapaneseCalendarBirthday(matches.birthday.text)
 
-    # Birthdays in Western calendar format.
-    matches.wrnBirthday = DotMap(text = '')
-    if matches.birthday.text:
-      matches.wrnBirthday.text = utils.toWesternCalendarDate(matches.birthday.text)
+      # Birthdays in Western calendar format.
+      matches.wrnBirthday = DotMap(text = '')
+      if matches.birthday.text:
+        matches.wrnBirthday.text = utils.toWesternCalendarDate(matches.birthday.text)
 
-    # Calculate age from birthday.
-    matches.age = DotMap(text = '')
-    if matches.wrnBirthday.text:
-      matches.age.text = utils.calculateAge(matches.wrnBirthday.text)
+      # Calculate age from birthday.
+      matches.age = DotMap(text = '')
+      if matches.wrnBirthday.text:
+        matches.age.text = utils.calculateAge(matches.wrnBirthday.text)
 
     # Clean up the expiration date.
-    if type == 'driverslicense':
+    if type == 'driverslicense' and 'expiryDate' in matches:
       matches.expiryDate.text = utils.cleanupJapaneseCalendarExpirationDate(matches.expiryDate.text)
-    else:
-      matches.cardExpiryDate.text = utils.cleanupJapaneseCalendarExpirationDate(matches.cardExpiryDate.text)
-      matches.digiExpiryDate.text = utils.cleanupJapaneseCalendarExpirationDate(matches.digiExpiryDate.text)
+    elif type == 'mynumber':
+      if 'cardExpiryDate' in matches:
+        matches.cardExpiryDate.text = utils.cleanupJapaneseCalendarExpirationDate(matches.cardExpiryDate.text)
+      if 'digiExpiryDate' in matches:
+        matches.digiExpiryDate.text = utils.cleanupJapaneseCalendarExpirationDate(matches.digiExpiryDate.text)
 
     # Normalized address.
-    matches.normalizedAddress = DotMap(
-      pref = DotMap(text = ''),
-      city = DotMap(text = ''),
-      town = DotMap(text = ''),
-      addr = DotMap(text = '')
-    )
-    if matches.address.text:
-      normalizedAddress = normalize(matches.address.text)
-      matches.normalizedAddress.pref.text = normalizedAddress['pref']
-      matches.normalizedAddress.city.text = normalizedAddress['city']
-      matches.normalizedAddress.town.text = normalizedAddress['town']
-      matches.normalizedAddress.addr.text = normalizedAddress['addr']
+    if 'address' in matches:
+      matches.normalizedAddress = DotMap(
+        pref = DotMap(text = ''),
+        city = DotMap(text = ''),
+        town = DotMap(text = ''),
+        addr = DotMap(text = '')
+      )
+      if matches.address.text:
+        normalizedAddress = normalize(matches.address.text)
+        matches.normalizedAddress.pref.text = normalizedAddress['pref']
+        matches.normalizedAddress.city.text = normalizedAddress['city']
+        matches.normalizedAddress.town.text = normalizedAddress['town']
+        matches.normalizedAddress.addr.text = normalizedAddress['addr']
   return matches
 
 def _detectText(img, mime):
@@ -178,10 +188,11 @@ def _findSymbol(texts, img, ndigits = 3):
   # Sort the symbol rectangles from top left to bottom right.
   return sorted(symbols, key=lambda sym: np.linalg.norm(np.array((sym.rect[0][0], sym.rect[0][1])) - np.array([0,0])))
 
-def _loadAnnotation(type, ndigits = 3):
+def _loadAnnotation(type, fields = None, ndigits = 3):
   """Returns the rectangular point of the OCR field.
   Args:
       type (str): Document type. (driverslicense: Driver's license card, mynumber: My number card)
+      fields (list, optional): Fields to be scanned. Defaults to None(all fields).
       ndigits (int, optional): _description_. Defaults to 3.
   Returns:
       list: Returns a list where the key is the field name and the value is a rectangular point. The points of the rectangle are in the order of upper left, upper right, lower right, lower left.
@@ -205,6 +216,14 @@ def _loadAnnotation(type, ndigits = 3):
   # Coordinates for each field.
   annotations = []
   for obj in root.findall('object'):
+    # Annotation Item Name.
+    name = obj.find('name').text
+
+    # If a scan item is specified.
+    if fields and name not in fields:
+      # No items other than the specified scan items are read.
+      continue
+
     # Convert points from px to ratios.
     bb = obj.find('bndbox')
     xmin = round(float(bb.find('xmin').text) / width, ndigits)
@@ -214,7 +233,7 @@ def _loadAnnotation(type, ndigits = 3):
 
     # To rectangular four points.
     annotations.append(DotMap(
-      name = obj.find('name').text,
+      name = name,
       rect = np.array(((xmin, ymin), (xmax, ymin), (xmax, ymax), (xmin, ymax)))
     ))
   return annotations

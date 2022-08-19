@@ -10,11 +10,10 @@ router.post('/', async (req, res, next) => {
     Media.writeDataUrlToFile(imgPath, req.body.image);
 
     // Invoke scan.
-    const scriptPath = path.resolve(global.APP_DIR, '../src');
     let matches = await new Promise((rslv, rej) => {
       PythonShell.run('scan_cli.py', {
         pythonPath: '/usr/local/bin/python3.9',
-        scriptPath,
+        scriptPath: path.resolve(global.APP_DIR, '../src'),
         args: ['-i', imgPath, '-t', req.body.type],
         mode: 'text'
       }, (err, res) => {
@@ -27,10 +26,9 @@ router.post('/', async (req, res, next) => {
 
     // OCR results from json to object.
     matches = JSON.parse(matches || '{}');
-    console.log('matches=', matches);
+    // console.log('matches=', matches);
     res.json(matches);
   } catch (err) {
-    console.error(err);
     next(err);
   }
 });

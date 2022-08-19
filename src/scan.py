@@ -3,11 +3,12 @@ from dotmap import DotMap
 import core
 import utils
 
-def scan(input, type, transformCallback = None):
+def scan(input, type, fields = None, transformCallback = None):
   """Scan text from a document.
   Args:
       input (str): Image path or DataURL.
       type (str): Document type. (driverslicense: Driver's license card, mynumber: My number card)
+      fields (list, optional): Fields to be scanned. Defaults to None(all fields).
       transformCallback (function, optional): Callback function for image transformation. Defaults to None.
   Raises:
       ValueError: The input parameter is incorrect.
@@ -34,7 +35,7 @@ def scan(input, type, transformCallback = None):
       return DotMap()
 
     # Scanning text.
-    return core.scanText(dataUrl, type, transformCallback)
+    return core.scanText(dataUrl, type, fields, transformCallback)
   except:
     utils.logging.exception('')
     raise

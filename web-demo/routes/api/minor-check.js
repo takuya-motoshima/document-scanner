@@ -1,9 +1,35 @@
 const router = require('express').Router();
+const {PythonShell} = require('python-shell')
+const {File, Media} = require('nodejs-shared');
+const path = require('path');
 
-router.post('/', async (req, res) => {
-  // const isNormalizeAddress = false;
-  // const isLookupPostalCode = false;
-  // const isNormalizeName = false;
-  // res.json(await OCRService.do(req.body.type, req.body.image, isNormalizeAddress, isLookupPostalCode, isNormalizeName));
+router.post('/', async (req, res, next) => {
+  try {
+    // Write DataURL as an image file.
+    imgPath = File.getTmpPath(Media.statDataUrl(req.body.image).type);
+    Media.writeDataUrlToFile(imgPath, req.body.image);
+
+    // Invoke scan.
+    let matches = await new Promise((rslv, rej) => {
+      PythonShell.run('scan_cli.py', {
+        pythonPath: '/usr/local/bin/python3.9',
+        scriptPath: path.resolve(global.APP_DIR, '../src'),
+        args: ['-i', imgPath, '-t', req.body.type, '-f', 'age'],
+        mode: 'text'
+      }, (err, res) => {
+        if (err)
+          return void rej(err);
+        // Each newline in the python print result is stored in an array element and returned.
+        rslv(res.join(''));
+      });
+    });
+
+    // OCR results from json to object.
+    matches = JSON.parse(matches || '{}');
+    console.log('matches=', matches);
+    res.json(matches);
+  } catch (err) {
+    next(err);
+  }
 });
 module.exports = router;
