@@ -1,4 +1,5 @@
 import os
+import sys
 import json
 import xml.etree.ElementTree as ET
 from pathlib import Path
@@ -9,7 +10,9 @@ from google.oauth2 import service_account
 from dotenv import dotenv_values
 from dotmap import DotMap
 from namedivider import NameDivider
+sys.path.append(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
 import utils
+from normalize_japanese_addresses import normalize
 
 def scanText(input, type, transformCallback = None):
   """Scanning text.
@@ -62,14 +65,12 @@ def scanText(input, type, transformCallback = None):
   # If a driver's license or my number card.
   if type == 'driverslicense' or type == 'mynumber':
     # If there is a first name and last name, split the first name and last name.
-    firstName = ''
-    lastName = ''
-    if matches['fullName']:
+    matches.firstName = DotMap(text = '')
+    matches.lastName = DotMap(text = '')
+    if matches.fullName.text:
       divideName = NameDivider().divide_name(matches.fullName.text)
-      firstName = divideName.given
-      lastName = divideName.family
-    matches.firstName = DotMap(text = firstName)
-    matches.lastName = DotMap(text = lastName)
+      matches.firstName.text = divideName.given
+      matches.lastName.text = divideName.family
 
     # Clean up the Japanese calendar birthdays.
     matches.birthday.text = utils.cleanupJapaneseCalendarBirthday(matches.birthday.text)
@@ -80,6 +81,20 @@ def scanText(input, type, transformCallback = None):
     else:
       matches.cardExpiryDate.text = utils.cleanupJapaneseCalendarExpirationDate(matches.cardExpiryDate.text)
       matches.digiExpiryDate.text = utils.cleanupJapaneseCalendarExpirationDate(matches.digiExpiryDate.text)
+
+    # Normalized address.
+    matches.normalizedAddress = DotMap(
+      pref = DotMap(text = ''),
+      city = DotMap(text = ''),
+      town = DotMap(text = ''),
+      addr = DotMap(text = '')
+    )
+    if matches.address.text:
+      normalizedAddress = normalize(matches.address.text)
+      matches.normalizedAddress.pref.text = normalizedAddress['pref']
+      matches.normalizedAddress.city.text = normalizedAddress['city']
+      matches.normalizedAddress.town.text = normalizedAddress['town']
+      matches.normalizedAddress.addr.text = normalizedAddress['addr']
   return matches
 
 def _detectText(img, mime):

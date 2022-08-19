@@ -60,6 +60,7 @@ $('body')
 
       // Perform OCR.
       const {data} = await ocrApi.ocr(type, await getImageAsDataURL());
+      console.log('data=', data);
 
       // Show the results on the screen.
       if (type === 'driverslicense') {
@@ -68,24 +69,24 @@ $('body')
         ref.driverslicenseLastName.text(data.lastName);
         ref.driverslicenseNumber.text(data.licenseNumber);
         ref.driverslicenseExpiryDate.text(data.expiryDate);
-        ref.driverslicenseWesternExpiryDate.text(data.wrnExpiryDate);
+        // ref.driverslicenseWesternExpiryDate.text(data.wrnExpiryDate);
         ref.driverslicenseBirthday.text(data.birthday);
-        ref.driverslicenseWesternBirthday.text(data.wrnBirthday);
-        ref.driverslicensePostalCode.text(data.postalCode);
-        ref.driverslicenseAddress.text(data.address.raw);
+        // ref.driverslicenseWesternBirthday.text(data.wrnBirthday);
+        // ref.driverslicensePostalCode.text(data.postalCode);
+        ref.driverslicenseAddress.text(data.address);
       } else {
         ref.mynumberFullName.text(data.fullName);
         ref.mynumberFirstName.text(data.firstName);
         ref.mynumberLastName.text(data.lastName);
         ref.mynumberGender.text(data.gender);
         ref.mynumberCardExpiryDate.text(data.cardExpiryDate);
-        ref.mynumberWesternCardExpiryDate.text(data.wrnCardExpiryDate);
+        // ref.mynumberWesternCardExpiryDate.text(data.wrnCardExpiryDate);
         ref.mynumberDigiExpiryDate.text(data.digiExpiryDate);
-        ref.mynumberWesternDigiExpiryDate.text(data.wrnDigiExpiryDate);
+        // ref.mynumberWesternDigiExpiryDate.text(data.wrnDigiExpiryDate);
         ref.mynumberBirthday.text(data.birthday);
-        ref.mynumberWesternBirthday.text(data.wrnBirthday);
-        ref.mynumberPostalCode.text(data.postalCode);
-        ref.mynumberAddress.text(data.address.raw);
+        // ref.mynumberWesternBirthday.text(data.wrnBirthday);
+        // ref.mynumberPostalCode.text(data.postalCode);
+        ref.mynumberAddress.text(data.address);
       }
 
       // Hide the loading indicator.

@@ -18,12 +18,19 @@ Scan Japanese My Number Card:
 
 ## Requirements
 - Python 3.9 (tested under Python 3.9.10)
+- numpy==1.22.1
 - opencv-python 4.5.5.62
 - opencv-contrib-python 4.5.5.62
 - google-cloud-vision 2.6.3
 - python-dotenv 0.19.2
 - dotmap 1.3.30
 - namedivider-python 0.1.0
+
+The following is used for address normalization.
+- kanjize 1.0.0
+- requests 2.25.1
+- pandas 1.2.4
+- cachetools 4.2.2
 
 ## Installation
 Install dependent packages.  
@@ -69,7 +76,13 @@ python src/scan_cli.py -i img/driverslicense.png -t driverslicense --debug
 #     "expiryDate": "2024年(令和06年)06月01日まで有効",
 #     "licenseNumber": "012345678900",
 #     "firstName": "花子",
-#     "lastName": "日本"
+#     "lastName": "日本",
+#     "normalizedAddress": {
+#         "pref": "東京都",
+#         "city": "千代田区",
+#         "town": "霞が関二丁目",
+#         "addr": "1-2"
+#     }
 # }
 ```
 
@@ -85,7 +98,13 @@ python src/scan_cli.py -i img/mynumber.png -t mynumber --debug
 #     "digiExpiryDate": "2020年3月31日",
 #     "gender": "女",
 #     "firstName": "花子",
-#     "lastName": "番号"
+#     "lastName": "番号",
+#     "normalizedAddress": {
+#         "pref": "東京都",
+#         "city": "千代田区",
+#         "town": "霞が関二丁目",
+#         "addr": "1-2"
+#     }
 # }
 ```
 

@@ -1,7 +1,9 @@
 import os
+import sys
 import cv2
 import numpy as np
 from dotmap import DotMap
+sys.path.append(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
 import utils
 
 def detectDocument(input, transformCallback = None):
