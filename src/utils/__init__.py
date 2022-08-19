@@ -18,3 +18,5 @@ from .isNdarray import *
 from .cleanupJapaneseCalendarBirthday import *
 from .cleanupJapaneseCalendarExpirationDate import *
 from .validateDate import *
+from .toWesternCalendarDate import *
+from .calculateAge import *

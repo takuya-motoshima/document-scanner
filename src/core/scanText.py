@@ -1,3 +1,4 @@
+from ctypes import util
 import os
 import sys
 import json
@@ -74,6 +75,16 @@ def scanText(input, type, transformCallback = None):
 
     # Clean up the Japanese calendar birthdays.
     matches.birthday.text = utils.cleanupJapaneseCalendarBirthday(matches.birthday.text)
+
+    # Birthdays in Western calendar format.
+    matches.wrnBirthday = DotMap(text = '')
+    if matches.birthday.text:
+      matches.wrnBirthday.text = utils.toWesternCalendarDate(matches.birthday.text)
+
+    # Calculate age from birthday.
+    matches.age = DotMap(text = '')
+    if matches.wrnBirthday.text:
+      matches.age.text = utils.calculateAge(matches.wrnBirthday.text)
 
     # Clean up the expiration date.
     if type == 'driverslicense':

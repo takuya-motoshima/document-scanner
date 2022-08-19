@@ -71,7 +71,8 @@ $('body')
         ref.driverslicenseExpiryDate.text(data.expiryDate);
         // ref.driverslicenseWesternExpiryDate.text(data.wrnExpiryDate);
         ref.driverslicenseBirthday.text(data.birthday);
-        // ref.driverslicenseWesternBirthday.text(data.wrnBirthday);
+        ref.driverslicenseAge.text(data.age ? `${data.age}歳` : '');
+        ref.driverslicenseWesternBirthday.text(data.wrnBirthday);
         // ref.driverslicensePostalCode.text(data.postalCode);
         ref.driverslicenseAddress.text(data.address);
       } else {
@@ -84,7 +85,8 @@ $('body')
         ref.mynumberDigiExpiryDate.text(data.digiExpiryDate);
         // ref.mynumberWesternDigiExpiryDate.text(data.wrnDigiExpiryDate);
         ref.mynumberBirthday.text(data.birthday);
-        // ref.mynumberWesternBirthday.text(data.wrnBirthday);
+        ref.mynumberAge.text(data.age ? `${data.age}歳` : '');
+        ref.mynumberWesternBirthday.text(data.wrnBirthday);
         // ref.mynumberPostalCode.text(data.postalCode);
         ref.mynumberAddress.text(data.address);
       }
