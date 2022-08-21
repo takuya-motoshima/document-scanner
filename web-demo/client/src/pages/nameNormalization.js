@@ -1,7 +1,7 @@
-import '~/pages/addressNormalization.css';
-import AddressNormalizationApi from '~/api/AddressNormalizationApi';
+import '~/pages/nameNormalization.css';
+import NameNormalizationApi from '~/api/NameNormalizationApi';
 
-const addressNormalizationApi = new AddressNormalizationApi();
+const nameNormalizationApi = new NameNormalizationApi();
 const inputs = document.querySelector('#inputs');
 const form = document.querySelector('#form');
 const submit = form.querySelector('[type="submit"]');
@@ -34,18 +34,15 @@ inputs.addEventListener('input', () => {
     const cellNo = document.createElement('td');
     cellNo.classList.add('ps-9');
     cellNo.textContent = `#${parseInt(i, 10) + 1}`;
-    const cellAddress = document.createElement('td');
-    const cellPref = document.createElement('td');
-    const cellCity = document.createElement('td');
-    const cellTown = document.createElement('td');
-    const cellAddr = document.createElement('td');
-    cellAddress.textContent = value;
+    const cellFullname = document.createElement('td');
+    cellFullname.textContent = value;
+    const cellScore = document.createElement('td');
+    cellScore.classList.add('text-end');
     row.appendChild(cellNo);
-    row.appendChild(cellAddress);
-    row.appendChild(cellPref);
-    row.appendChild(cellCity);
-    row.appendChild(cellTown);
-    row.appendChild(cellAddr);
+    row.appendChild(cellFullname);
+    row.appendChild(document.createElement('td'));
+    row.appendChild(document.createElement('td'));
+    row.appendChild(cellScore);
     fragment.appendChild(row);
   }
   table.innerHTML = '';
@@ -61,25 +58,35 @@ form.addEventListener('submit', async evnt => {
     for (let row of table.querySelectorAll('tr')) {
       promises.push((row => {
         return new Promise(async (rslv, rej) => {
-          const cellPref = row.querySelector('td:nth-child(3)');
-          const cellCity = row.querySelector('td:nth-child(4)');
-          const cellTown = row.querySelector('td:nth-child(5)');
-          const cellAddr = row.querySelector('td:nth-child(6)');
+          const cellLastName = row.querySelector('td:nth-child(3)');
+          const cellFirstName = row.querySelector('td:nth-child(4)');
+          const cellScore = row.querySelector('td:nth-child(5)');
+
+          // Clear cells before updating data.
+          cellLastName.textContent = cellFirstName.textContent = cellScore.textContent = '';
+
           try {
             // Show loading.
-            cellPref.innerHTML = `<div class="spinner-border spinner-border-sm" role="status">
+            cellLastName.innerHTML = `<div class="spinner-border spinner-border-sm" role="status">
                                 <span class="visually-hidden">Loading...</span>
-                              </div>`
+                              </div>`;
 
             // Send request.
-            const {data} = await addressNormalizationApi.addressNormalization(row.querySelector('td:nth-child(2)').textContent);
-            cellPref.innerHTML = data.pref;
-            cellCity.innerHTML = data.city;
-            cellTown.innerHTML = data.town;
-            cellAddr.innerHTML = data.addr;
+            const {data} = await nameNormalizationApi.nameNormalization(row.querySelector('td:nth-child(2)').textContent);
+            // console.log('data=', data);
+
+            const score = parseFloat(data.score);
+            const scorePercent = (score * 100).toFixed(2);
+            cellScore.innerHTML = `<span class="fw-bold">${scorePercent}</span>%`;
+            // cellScore.textContent = `${scorePercent}%`;
+            if (data.firstName && data.score >= .2) {
+              cellLastName.textContent = data.lastName;
+              cellFirstName.textContent = data.firstName;
+            } else
+              cellLastName.innerHTML = '<span class="text-danger">Can\'t find</span>';
             rslv();
           } catch (err) {
-            cellPref.innerHTML = '<span class="text-danger">Error</span>';
+            cellLastName.innerHTML = '<span class="text-danger">Error</span>';
             rej(err);
           }
         });

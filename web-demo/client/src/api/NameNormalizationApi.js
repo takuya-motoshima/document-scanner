@@ -5,13 +5,13 @@ export default class extends Api {
    * Initialize the API client.
    */
   constructor() {
-    super('/api/address-normalization');
+    super('/api/name-normalization');
   }
 
   /**
-   * Address normalization.
+   * Name normalization.
    */
-  async addressNormalization(address) {
-    return this.client.post('/', {address});
+  async nameNormalization(name) {
+    return this.client.post('/', {name});
   }
 }

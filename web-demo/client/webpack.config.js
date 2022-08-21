@@ -19,7 +19,8 @@ module.exports = {
     docs: './src/pages/docs.js',
     ocr: './src/pages/ocr.js',
     minorCheck: './src/pages/minorCheck.js',
-    addressNormalization: './src/pages/addressNormalization.js'
+    addressNormalization: './src/pages/addressNormalization.js',
+    nameNormalization: './src/pages/nameNormalization.js'
   },
 
   // File output settings.

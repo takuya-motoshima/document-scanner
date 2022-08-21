@@ -1,8 +1,8 @@
 {{!< default}}
-{{#contentFor 'title'}}住所を正規化{{/contentFor}}
-{{#contentFor 'description'}}住所を住所要素毎（都道府県、郡、市区町村など）に分割{{/contentFor}}
-{{#contentFor 'style'}}<link rel="stylesheet" type="text/css" href="{{cache_busting '/build/addressNormalization.css' ''}}">{{/contentFor}}
-{{#contentFor 'script'}}<script type="module" src="{{cache_busting '/build/addressNormalization.js' ''}}"></script>{{/contentFor}}
+{{#contentFor 'title'}}氏名を正規化{{/contentFor}}
+{{#contentFor 'description'}}氏名を姓と名に分割{{/contentFor}}
+{{#contentFor 'style'}}<link rel="stylesheet" type="text/css" href="{{cache_busting '/build/nameNormalization.css' ''}}">{{/contentFor}}
+{{#contentFor 'script'}}<script type="module" src="{{cache_busting '/build/nameNormalization.js' ''}}"></script>{{/contentFor}}
 <div class="d-flex flex-column flex-lg-row">
   <div class="flex-column flex-lg-row-auto w-100 w-lg-600px mb-10 mb-lg-0">
     <div class="card card-flush mb-0"
@@ -19,13 +19,28 @@
           <button type="submit" class="btn btn-primary w-100 mb-10" disabled>
             <div class="spinner-border spinner-border-sm me-2 d-none" role="status">
               <span class="visually-hidden">Loading...</span>
-            </div>住所の正規化を実行
+            </div>氏名の正規化を実行
           </button>
-          <textarea class="form-control" data-kt-autosize="true" id="inputs" maxlength="2000" autofocus="autofocus">大阪府守口市佐太東町3-101-5
-京都府京都市伏見区淀水垂町509-16
-愛知県名古屋市北区金田町4-721-1
-大阪府堺市南区片蔵508丁目1番地1号
-大阪府堺市南区片蔵508丁目1-1</textarea>
+          <textarea class="form-control" data-kt-autosize="true" id="inputs" maxlength="2000" autofocus="autofocus">中川正敏
+白井慶太
+草野あき
+中根芳正
+大谷誠治
+古川竜也
+斎藤夏希
+金山太朗
+矢沢雅之
+星友以乃
+益田勇一
+三浦瑠璃亜
+浅倉菜摘
+片瀬優
+西本陽子
+今田翔太
+永山メイサ
+美木洋介
+関あおい
+湯浅優</textarea>
         </form>
       </div>
     </div>
@@ -37,11 +52,10 @@
           <thead class="text-nowrap">
             <tr>
               <th></th>
-              <th>住所</th>
-              <th>都道府県</th>
-              <th>市区町村</th>
-              <th>町域</th>
-              <th>番地</th>
+              <th>氏名</th>
+              <th>姓</th>
+              <th>名</th>
+              <th class="text-end">分割の信頼度</th>
             </tr>
           </thead>
           <tbody>
