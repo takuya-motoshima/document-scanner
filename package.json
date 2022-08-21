@@ -1,6 +1,6 @@
 {
   "name": "document-scanner",
-  "version": "1.0.9",
+  "version": "1.0.10",
   "description": "Scan the text of a document.",
   "main": "index.js",
   "scripts": {
