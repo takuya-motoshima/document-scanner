@@ -12,6 +12,7 @@
     "debug": "~2.6.9",
     "express": "~4.16.1",
     "express-sweet": "~1",
+    "express-validator": "^6.14.2",
     "http-errors": "~1.6.3",
     "nodejs-shared": "^1.0.3",
     "passport": "^0.4.1",

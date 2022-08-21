@@ -18,7 +18,8 @@ module.exports = {
   entry: {
     docs: './src/pages/docs.js',
     ocr: './src/pages/ocr.js',
-    minorCheck: './src/pages/minorCheck.js'
+    minorCheck: './src/pages/minorCheck.js',
+    addressNormalization: './src/pages/addressNormalization.js'
   },
 
   // File output settings.

@@ -70,13 +70,15 @@ python src/scan_cli.py --help
 python src/scan_cli.py -i img/driverslicense.png -t driverslicense --debug
 # Result:
 # {
-#     "fullName": "日本花子",
-#     "birthday": "昭和61年5月1日生",
-#     "address": "東京都千代田区霞が関2-1-2",
-#     "expiryDate": "2024年(令和06年)06月01日まで有効",
-#     "licenseNumber": "012345678900",
+#     "fullName": "日本本花子",
 #     "firstName": "花子",
 #     "lastName": "日本",
+#     "age": 36,
+#     "birthday": "昭和61年5月1日",
+#     "wrnBirthday": "1986-05-01",
+#     "expiryDate": "2024年06月01日",
+#     "licenseNumber": "012345678900",
+#     "address": "東京都千代田区霞が関2-1-2",
 #     "normalizedAddress": {
 #         "pref": "東京都",
 #         "city": "千代田区",
@@ -92,13 +94,15 @@ python src/scan_cli.py -i img/mynumber.png -t mynumber --debug
 # Result:
 # {
 #     "fullName": "番号花子",
-#     "address": "東京都千代田区霞が関2-1-2",
-#     "birthday": "平成元年3月31日生",
-#     "cardExpiryDate": "2025年3月31日まで有効",
-#     "digiExpiryDate": "2020年3月31日",
-#     "gender": "女",
 #     "firstName": "花子",
 #     "lastName": "番号",
+#     "age": 33,
+#     "gender": "女",
+#     "birthday": "平成元年3月31日",
+#     "wrnBirthday": "1989-03-31",
+#     "cardExpiryDate": "2025年03月31日",
+#     "digiExpiryDate": "2020年03月31日",
+#     "address": "東京都千代田区霞が関2-1-2",
 #     "normalizedAddress": {
 #         "pref": "東京都",
 #         "city": "千代田区",

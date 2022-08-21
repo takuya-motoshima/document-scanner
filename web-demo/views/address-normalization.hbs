@@ -1,0 +1,55 @@
+{{!< default}}
+{{#contentFor 'title'}}住所を正規化{{/contentFor}}
+{{#contentFor 'description'}}住所を住所要素毎（都道府県、郡、市区町村など）に分割{{/contentFor}}
+{{#contentFor 'style'}}<link rel="stylesheet" type="text/css" href="{{cache_busting '/build/addressNormalization.css' ''}}">{{/contentFor}}
+{{#contentFor 'script'}}<script type="module" src="{{cache_busting '/build/addressNormalization.js' ''}}"></script>{{/contentFor}}
+<div class="d-flex flex-column flex-lg-row">
+  <div class="flex-column flex-lg-row-auto w-100 w-lg-600px mb-10 mb-lg-0">
+    <div class="card card-flush mb-0"
+      data-kt-sticky="true"
+      data-kt-sticky-name="inbox-aside-sticky"
+      data-kt-sticky-offset="{default: false, xl: '0px'}"
+      data-kt-sticky-width="{lg: '600px'}"
+      data-kt-sticky-left="auto"
+      data-kt-sticky-top="150px"
+      data-kt-sticky-animation="false"
+      data-kt-sticky-zindex="95">
+      <div class="card-body">
+        <form id="form">
+          <button type="submit" class="btn btn-primary w-100 mb-10" disabled>
+            <div class="spinner-border spinner-border-sm me-2 d-none" role="status">
+              <span class="visually-hidden">Loading...</span>
+            </div>住所の正規化を実行
+          </button>
+          <textarea class="form-control" data-kt-autosize="true" id="inputs" maxlength="2000" autofocus="autofocus">大阪府守口市佐太東町3-101-5
+京都府京都市伏見区淀水垂町509-16
+愛知県名古屋市北区金田町4-721-1
+大阪府堺市南区片蔵508丁目1番地1号
+大阪府堺市南区片蔵508丁目1-1
+大阪府堺市片蔵508丁目1-1 区アパート104
+大阪府堺市片蔵508丁目1-1 アパート区104</textarea>
+        </form>
+      </div>
+    </div>
+  </div>
+  <div class="flex-lg-row-fluid ms-lg-7 ms-xl-10">
+    <div class="card">
+      <div class="card-body">
+        <table class="table table-hover table-row-dashed fs-6 gy-5 my-0" id="table">
+          <thead class="text-nowrap">
+            <tr>
+              <th></th>
+              <th>住所</th>
+              <th>都道府県</th>
+              <th>市区町村</th>
+              <th>町域</th>
+              <th>番地</th>
+            </tr>
+          </thead>
+          <tbody>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
