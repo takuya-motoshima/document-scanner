@@ -1,7 +1,10 @@
 import cv2
+from pathlib import Path
+
 
 # Load the image.
-img = cv2.imread('../img/edge.png')
+imgDir = f'{Path(__file__).parents[1]}/img'
+img = cv2.imread(f'{imgDir}/edge.png')
 
 # Grayscale the image.
 grayImg = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)

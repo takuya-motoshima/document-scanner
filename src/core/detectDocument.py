@@ -101,7 +101,7 @@ def detectDocument(input, transformCallback = None):
     # Skip if the rectangle is adjacent to a margin created in the image.
     if padding > 0:
       contourRect = utils.contourToRect(approx)
-      correction = 5;
+      correction = 5
       if (not(
         contourRect[0].x >= clientRect[0].x - correction and
         contourRect[0].y >= clientRect[0].y - correction and
