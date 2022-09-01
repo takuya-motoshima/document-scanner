@@ -15,6 +15,7 @@ Scan Japanese My Number Card:
 
 ## Documentation
 * [Changelog](CHANGELOG.md)
+* [How to use the template](HOW_TO_TEMPLATE.md)
 
 ## Requirements
 - Python 3.9 (tested under Python 3.9.10)
