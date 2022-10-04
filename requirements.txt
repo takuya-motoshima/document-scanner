@@ -16,9 +16,9 @@ kanjize==1.0.0
 labelImg==1.8.6
 lxml==4.9.1
 namedivider-python==0.1.0
-numpy==1.22.1
-opencv-contrib-python==4.5.5.62
-opencv-python==4.5.5.62
+numpy==1.23.3
+opencv-contrib-python==4.6.0.66
+opencv-python==4.6.0.66
 pandas==1.2.4
 proto-plus==1.22.1
 protobuf==4.21.7

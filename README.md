@@ -16,9 +16,9 @@ Scan the text of a document.
 
 ## Requirements
 - Python 3.9 (tested under Python 3.9.10)
-- numpy==1.22.1
-- opencv-python 4.5.5.62
-- opencv-contrib-python 4.5.5.62
+- numpy==1.23.3
+- opencv-python 4.6.0.66
+- opencv-contrib-python 4.6.0.66
 - google-cloud-vision 2.6.3
 - python-dotenv 0.19.2
 - dotmap 1.3.30
@@ -58,12 +58,12 @@ Normalization of addresses.
     ```sh
     PS C:\workspaces\document-scanner>
     ```
-2. Install dependent packages.  
+1. Install dependent packages.  
     ```sh
     python -m pip install --no-cache-dir -r requirements.txt
     # python3.9 -m pip install --no-cache-dir -r requirements.txt
     ```
-3. Create an .env file and write your Google Vision credentials as follows.
+1. Create an .env file and write your Google Vision credentials as follows.
     ```text
     GOOGLE_APPLICATION_CREDENTIALS={"type": "service_account","project_id": "XXX","private_key_id": "XXX","private_key": "-----BEGIN PRIVATE KEY-----\nXXX","client_email": "XXX","client_id": "XXX","auth_uri": "https://accounts.google.com/o/oauth2/auth","token_uri": "https://oauth2.googleapis.com/token","auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs","client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/XXX"}
     ```

@@ -1,9 +1,9 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
-## [1.0.x] - 2022/10/4
+## [1.0.13] - 2022/10/4
 ### Fixed
-- Fix requirements.txt and README.md.
+- Update dependent numpy and opencv.
 
 ## [1.0.12] - 2022/10/4
 ### Fixed
