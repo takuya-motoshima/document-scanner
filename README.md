@@ -18,7 +18,7 @@ Scan the text of a document.
 Python is 3.9.  
 See [requirements.txt](requirements.txt) for dependencies.
 
-## Installation
+## Getting Started
 1. Create a virtual environment.  
     This is necessary to avoid dependency package conflicts with other projects using the same dependency package.
     ```sh
@@ -42,6 +42,11 @@ See [requirements.txt](requirements.txt) for dependencies.
     ```sh
     PS C:\workspaces\document-scanner>
     ```
+1. For WIndows, install 'NVIDIA cuDNN' which is required to run tensorflow.  
+    **NOTE**: This procedure is not required for document scanners version 1.0.14 or lower.  
+    Go to [https://developer.nvidia.com/cuda-downloads](https://developer.nvidia.com/cuda-downloads) and install CUDA Toolkit 11.  
+    
+    ![screencaps/cuda-toolkit-downloads.png](screencaps/cuda-toolkit-downloads.png)
 1. Install dependent packages.  
     ```sh
     python -m pip install --no-cache-dir -r requirements.txt
