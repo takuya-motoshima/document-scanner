@@ -1,7 +1,11 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
-## [1.0.12] - 2022/8/21
+## [1.0.x] - 2022/10/4
+### Fixed
+- Fix requirements.txt and README.md.
+
+## [1.0.12] - 2022/10/4
 ### Fixed
 - Fix python function and variable names according to [PEP8](https://pep8.org/).
 

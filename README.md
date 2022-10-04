@@ -46,7 +46,7 @@ Normalization of addresses.
 
     Windows:  
     ```sh
-    document-scanner-env\Scripts\activate.bat
+    document-scanner-env\Scripts\activate
     ```
 
     Linux or Mac:  
@@ -58,12 +58,12 @@ Normalization of addresses.
     ```sh
     PS C:\workspaces\document-scanner>
     ```
-1. Install dependent packages.  
+2. Install dependent packages.  
     ```sh
     python -m pip install --no-cache-dir -r requirements.txt
     # python3.9 -m pip install --no-cache-dir -r requirements.txt
     ```
-1. Create an .env file and write your Google Vision credentials as follows.
+3. Create an .env file and write your Google Vision credentials as follows.
     ```text
     GOOGLE_APPLICATION_CREDENTIALS={"type": "service_account","project_id": "XXX","private_key_id": "XXX","private_key": "-----BEGIN PRIVATE KEY-----\nXXX","client_email": "XXX","client_id": "XXX","auth_uri": "https://accounts.google.com/o/oauth2/auth","token_uri": "https://oauth2.googleapis.com/token","auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs","client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/XXX"}
     ```
