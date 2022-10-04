@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [1.0.14] - 2022/10/4
+### Fixed
+- Update dependent google cloud vision.
+
 ## [1.0.13] - 2022/10/4
 ### Fixed
 - Update dependent numpy and opencv.
