@@ -1,14 +1,13 @@
 def main():
-  # Get command options.
+  args = _get_args()
+  normalized_address = normalize(args.address)
+  print(json.dumps(normalized_address, ensure_ascii=False, indent = 4))
+
+def _get_args():
   parser = argparse.ArgumentParser()
-  parser.add_argument('-i', '--input', type=str, required=True, help='Address')
-  options = DotMap(vars(parser.parse_args()))
+  parser.add_argument('--address', type=str, required=True, help='Address')
+  return DotMap(vars(parser.parse_args()))
 
-  # Normalized address.
-  normalizedAddress = normalize(options.input)
-
-  # Output the normalization result as JSON.
-  print(json.dumps(normalizedAddress, ensure_ascii=False, indent = 4))
 if __name__ == '__main__':
   import argparse
   import json

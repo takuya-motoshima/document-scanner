@@ -1,6 +1,6 @@
-from .toBase64 import toBase64
+from .to_base64 import to_base64
 
-def toDataUrl(img, mime = None):
+def to_data_url(img, mime = None):
   """Image to Data URL.
   Args:
       img (numpy.ndarray|str): CV2 Image or image path.
@@ -8,8 +8,5 @@ def toDataUrl(img, mime = None):
   Returns:
       tuple: Return Data URL and MIME type.
   """
-  # to base64.
-  b64, mime = toBase64(img, mime)
-
-  # Generates and returns a Data URL string based on base64.
-  return f'data:image/{mime};base64,{b64}', mime
+  b64, _ = to_base64(img, mime)
+  return f'data:image/{mime};base64,{b64}'

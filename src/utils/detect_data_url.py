@@ -1,6 +1,6 @@
 import re
 
-def detectDataUrl(str):
+def detect_data_url(str):
   """Detecting Data URL.
     data URI - MDN https://developer.mozilla.org/en-US/docs/data_URIs
     The "data" URL scheme: http://tools.ietf.org/html/rfc2397

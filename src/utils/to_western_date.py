@@ -1,9 +1,7 @@
 import re
-from datetime import datetime
 from japanera import Japanera
-from .validateDate import validateDate
 
-def toWesternCalendarDate(text):
+def to_western_date(text):
   """Convert a date in Japanese calendar format to Western calendar format.
   Args:
       text (str): Date in Japanese calendar format. e.g. 昭和61年5月1日

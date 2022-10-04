@@ -1,6 +1,6 @@
 import numpy as np
 
-def isNdarray(arr):
+def is_ndarray(arr):
   """Check if it is a Ndarray.
   Args:
       arr (any): Value to be checked.

@@ -1,6 +1,6 @@
 import cv2
 
-def resizeImage(img, width=None, height=None, intrpl = cv2.INTER_AREA):
+def resize_img(img, width=None, height=None, intrpl = cv2.INTER_AREA):
   """Resize the image.
   Args:
       img (numpy.ndarray): CV2 Image.
@@ -16,16 +16,16 @@ def resizeImage(img, width=None, height=None, intrpl = cv2.INTER_AREA):
       numpy.ndarray: Resized image.
   """  
   ratio = 1
-  origWidth, origHeight = img.shape[:2]
+  orig_height, orig_width = img.shape[:2]
   if width is None and height is None:
     return img, ratio
   elif width is None:
-    ratio = height / origHeight
-    width = int(origWidth * ratio)
-    resizeImg = cv2.resize(img, (height, width), intrpl)
-    return resizeImg, ratio
+    ratio = height / orig_width
+    width = int(orig_height * ratio)
+    resize_img = cv2.resize(img, (height, width), intrpl)
+    return resize_img, ratio
   else:
-    ratio = width / origWidth
-    height = int(origHeight * ratio)
-    resizeImg = cv2.resize(img, (height, width), intrpl)
-    return resizeImg, ratio
+    ratio = width / orig_height
+    height = int(orig_width * ratio)
+    resize_img = cv2.resize(img, (height, width), intrpl)
+    return resize_img, ratio

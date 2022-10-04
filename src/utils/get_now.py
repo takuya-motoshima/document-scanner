@@ -1,6 +1,6 @@
 import datetime
 
-def getNow(format = None):
+def get_now(format = None):
   """Returns the current date and time.
   Args:
       format (str, optional): Date and time format. e.g. '%Y%m%d%H%M%S'. Defaults to None.

@@ -1,18 +1,17 @@
 def main():
-  # Get command options.
-  parser = argparse.ArgumentParser()
-  parser.add_argument('-i', '--input', type=str, required=True, help='Person\'s Name')
-  options = DotMap(vars(parser.parse_args()))
-
-  # Normalized name.
-  divideName = NameDivider().divide_name(options.input)
-
-  # Output the normalization result as JSON.
+  args = _get_args();
+  divide_name = NameDivider().divide_name(args.name)
   print(json.dumps(dict(
-    firstName = divideName.given,
-    lastName = divideName.family,
-    score = divideName.score
+    firstName = divide_name.given,
+    lastName = divide_name.family,
+    score = divide_name.score
   ), ensure_ascii=False, indent = 4))
+
+def _get_args():
+  parser = argparse.ArgumentParser()
+  parser.add_argument('--name', type=str, required=True, help='Person\'s Name')
+  return DotMap(vars(parser.parse_args()))
+
 if __name__ == '__main__':
   import argparse
   import json

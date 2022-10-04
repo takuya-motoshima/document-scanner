@@ -1,7 +1,7 @@
 import numpy as np
 from dotmap import DotMap
 
-def contourToRect(contour):
+def contour_to_rect(contour):
   """Convert contour points (x, y) to four external rectangle points (x, y).
   Args:
       contour (numpy.ndarray): Contour points (x, y).

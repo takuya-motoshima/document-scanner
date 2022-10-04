@@ -1,2 +1,2 @@
-from .detectDocument import *
-from .scanText import *
+from .detect_id_card import *
+from .scan_text import *

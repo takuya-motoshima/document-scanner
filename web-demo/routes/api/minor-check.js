@@ -5,11 +5,8 @@ const path = require('path');
 
 router.post('/', async (req, res, next) => {
   try {
-    // Write DataURL as an image file.
     imgPath = File.getTmpPath(Media.statDataUrl(req.body.image).type);
     Media.writeDataUrlToFile(imgPath, req.body.image);
-
-    // Invoke scan.
     let matches = await new Promise((rslv, rej) => {
       PythonShell.run('scan_cli.py', {
         pythonPath: '/usr/local/bin/python3.9',
@@ -19,14 +16,10 @@ router.post('/', async (req, res, next) => {
       }, (err, res) => {
         if (err)
           return void rej(err);
-        // Each newline in the python print result is stored in an array element and returned.
         rslv(res.join(''));
       });
     });
-
-    // OCR results from json to object.
     matches = JSON.parse(matches || '{}');
-    // console.log('matches=', matches);
     res.json(matches);
   } catch (err) {
     next(err);

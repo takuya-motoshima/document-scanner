@@ -3,7 +3,7 @@ import unittest
 import src.utils as utils
 
 class TestUtils(unittest.TestCase):
-  def test_right_detectDataUrl(self):
+  def test_right_detect_data_url(self):
     cases = [
       'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQAQMAAAAlPW0iAAAABlBMVEUAAAD///+l2Z/dAAAAM0lEQVR4nGP4/5/h/1+G/58ZDrAz3D/McH8yw83NDDeNGe4Ug9C9zwz3gVLMDA/A6P9/AFGGFyjOXZtQAAAAAElFTkSuQmCC',
       'data:image/svg+xml;charset=utf-8,.',
@@ -20,8 +20,8 @@ class TestUtils(unittest.TestCase):
     ]
     for case in cases:
       with self.subTest(case):
-        self.assertIsNotNone(utils.detectDataUrl(case))
-  def test_wrong_detectDataUrl(self):
+        self.assertIsNotNone(utils.detect_data_url(case))
+  def test_wrong_detect_data_url(self):
     cases = [
       'dataxbase64',
       'data:HelloWorld',
@@ -35,8 +35,8 @@ class TestUtils(unittest.TestCase):
     ]
     for case in cases:
       with self.subTest(case):
-        self.assertIsNone(utils.detectDataUrl(case))
-  def test_right_toDataUrl(self):
+        self.assertIsNone(utils.detect_data_url(case))
+  def test_right_to_data_url(self):
     cases = [
       ['img/driverslicense.png', None],# Correct image path.
       [np.zeros((100, 100, 3)), 'png']# Image of correct ndarray type.
@@ -44,9 +44,9 @@ class TestUtils(unittest.TestCase):
     for case in cases:
       with self.subTest(case):
         img, mime = case
-        res = utils.toDataUrl(img, mime)
-        self.assertRegex(res,  r'^data:..*$')
-  def test_right_toDataUrl(self):
+        data_url = utils.to_data_url(img, mime)
+        self.assertRegex(data_url,  r'^data:..*$')
+  def test_right_to_data_url(self):
     cases = [
       ['img/driverslicense.png', None],# Correct image path.
       [np.zeros((100, 100, 3)), 'png']# Image of correct ndarray type.
@@ -54,9 +54,9 @@ class TestUtils(unittest.TestCase):
     for case in cases:
       with self.subTest(case):
         img, mime = case
-        b64, _ = utils.toDataUrl(img, mime)
-        self.assertRegex(b64,  r'^data:..*$')
-  def test_right_calcIoU(self):
+        data_url = utils.to_data_url(img, mime)
+        self.assertRegex(data_url,  r'^data:..*$')
+  def test_right_calc_iou(self):
     cases = [
       dict(input = [[0, 0, 10, 10], [0, 0, 10, 10]], expected = [1.0, 100]),
       dict(input = [[0, 0, 10, 10], [1, 1, 11, 11]], expected = [0.681, 81]),
@@ -66,8 +66,8 @@ class TestUtils(unittest.TestCase):
     for case in cases:
       with self.subTest(case):
         input, expected = case.values()
-        iou, interArea, aArea, bArea = utils.calcIoU(input[0], input[1])
-        self.assertEqual([iou, interArea], expected)
+        iou, inter_area, aArea, bArea = utils.calc_iou(input[0], input[1])
+        self.assertEqual([iou, inter_area], expected)
 
 if __name__ == '__main__':
   unittest.main()

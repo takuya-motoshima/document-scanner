@@ -1,6 +1,6 @@
 import json
 
-def writeJson(path, data):
+def write_json(path, data):
   """Write the data to a file as JSON.
   Args:
       path (str): File Path.

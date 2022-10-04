@@ -1,6 +1,6 @@
 from datetime import datetime
 
-def validateDate(text, format = '%Y-%m-%d'):
+def validate_date(text, format = '%Y-%m-%d'):
   """Check date format.
   Args:
       text (str): Date string.

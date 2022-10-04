@@ -7,3 +7,4 @@ logs/*
 web-demo/.env
 web-demo/logs/*
 !web-demo/logs/
+document-scanner-env/

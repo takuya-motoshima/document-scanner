@@ -1,5 +1,7 @@
 import '~/pages/nameNormalization.css';
 import NameNormalizationApi from '~/api/NameNormalizationApi';
+import trim from '~/shared/trim';
+import splitNewLine from '~/shared/splitNewLine';
 
 const nameNormalizationApi = new NameNormalizationApi();
 const inputs = document.querySelector('#inputs');
@@ -8,26 +10,12 @@ const submit = form.querySelector('[type="submit"]');
 const spinner = submit.querySelector('.spinner-border');
 const table = document.querySelector('#table > tbody');
 
-// Activate submit if there is input.
 inputs.addEventListener('input', () => {
-  // Remove spaces before and after each line from the input value.
-  const value = inputs.value.replace(/\r?\n/g, '').replace(/^[\s　]+|[\s　]+$/g, '');
-
-  // Activate submit if there is input.
+  const value = trim(inputs.value);
   submit.disabled = value === '';
-
-  // If there is no input, empty the table and finish.
   if (!value)
     return void (table.innerHTML = '');
-
-  // Split the input value into lines.
-  const rows = inputs.value
-    .replace(/^[\s　]*\r?\n/gm, '')     // Remove blank lines.
-    .replace(/\r?\n$/, '')              // Removed trailing line breaks.
-    .replace(/^[\s　]+|[\s　]+$/gm, '') // Trim the space in each row.
-    .split(/\r?\n/);
-
-  // Display the entered address in the table.
+  const rows = splitNewLine(inputs.value);
   const fragment = document.createDocumentFragment();
   for (let [i, value] of Object.entries(rows)) {
     const row = document.createElement('tr');
@@ -49,7 +37,6 @@ inputs.addEventListener('input', () => {
   table.appendChild(fragment);
 }, {passive: true});
 
-// Submit.
 form.addEventListener('submit', async evnt => {
   try {
     evnt.preventDefault();
@@ -61,20 +48,11 @@ form.addEventListener('submit', async evnt => {
           const cellLastName = row.querySelector('td:nth-child(3)');
           const cellFirstName = row.querySelector('td:nth-child(4)');
           const cellScore = row.querySelector('td:nth-child(5)');
-
-          // Clear cells before updating data.
           cellLastName.textContent = cellFirstName.textContent = cellScore.textContent = '';
-
           try {
-            // Show loading.
-            cellLastName.innerHTML = `<div class="spinner-border spinner-border-sm" role="status">
-                                <span class="visually-hidden">Loading...</span>
-                              </div>`;
-
-            // Send request.
+            cellLastName.innerHTML = `<div class="spinner-border spinner-border-sm" role="status"><span class="visually-hidden">Loading...</span></div>`;
             const {data} = await nameNormalizationApi.nameNormalization(row.querySelector('td:nth-child(2)').textContent);
             // console.log('data=', data);
-
             const score = parseFloat(data.score);
             const scorePercent = (score * 100).toFixed(2);
             cellScore.innerHTML = `<span class="fw-bold">${scorePercent}</span>%`;
@@ -100,5 +78,4 @@ form.addEventListener('submit', async evnt => {
   }
 }, {passive: false});
 
-// Fire input event.
 inputs.dispatchEvent(new Event('input'));
