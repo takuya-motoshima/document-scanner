@@ -25,10 +25,10 @@ Scan the text of a document.
 - namedivider-python 0.1.0
 - Japanera 0.1.1
 
-Labeling tool for items to be extracted by OCR.
-labelImg==1.8.6
+Labeling tool for items to be extracted by OCR.  
+- labelImg==1.8.6
 
-Normalization of addresses.
+Normalization of addresses.  
 - kanjize 1.0.0
 - requests 2.25.1
 - pandas 1.2.4
