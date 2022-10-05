@@ -27,15 +27,16 @@ def detect_id_card(img, debug_img_callback = None):
   margin = 5
   margin_img = _margins(resize_img, margin)
   orig_coordinates = _get_coordinates_without_margins(margin_img, margin)
-  debug_img_callback('margin', cv2.rectangle(margin_img.copy(), (orig_coordinates[0].x, orig_coordinates[0].y), (orig_coordinates[2].x, orig_coordinates[2].y), (0,255,0), 2))
+  debug_img_callback('margin_img', cv2.rectangle(margin_img.copy(), (orig_coordinates[0].x, orig_coordinates[0].y), (orig_coordinates[2].x, orig_coordinates[2].y), (0,255,0), 2))
   edge_img = _detect_edges(margin_img, debug_img_callback)
   id_card_contour = _detect_id_card_contour(edge_img, margin, orig_coordinates)
   if id_card_contour is None:
     return None
   debug_img_callback('contour', cv2.drawContours(resize_img.copy(), [id_card_contour], -1, (0,255,0), 2))
-  warp_img = _perspective_correction(img, id_card_contour, ratio, debug_img_callback);
-  warp_img = _resize_to_id_card_ratio(warp_img)
-  return utils.to_data_url(warp_img, mime_type)
+  warped_img = _perspective_correction(img, id_card_contour, ratio);
+  debug_img_callback('warped_img', warped_img)
+  warped_img = _resize_to_id_card_ratio(warped_img)
+  return utils.to_data_url(warped_img, mime_type)
 
 def _validate_params(img):
   if (not utils.is_data_url(img) and not os.path.exists(img) and not os.path.isfile(img)):
@@ -64,26 +65,25 @@ def _get_coordinates_without_margins(img, margin):
 
 def _detect_edges(img, debug_img_callback):
   # grayscaling.
-  img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-  debug_img_callback('grayscaling', img)
+  gray_img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+  debug_img_callback('gray_img', gray_img)
 
   # remove noise.
-  img = cv2.medianBlur(img, ksize=5)
-  debug_img_callback('median', img)
+  median_img = cv2.medianBlur(gray_img, ksize=5)
+  debug_img_callback('median_img', median_img)
 
   # shrink the white areas and expand the black areas.
-  img = cv2.erode(img, kernel=np.ones((5,5), np.uint8), iterations=1)
-  debug_img_callback('erosion', img)
+  erode_img = cv2.erode(median_img, kernel=np.ones((5,5), np.uint8), iterations=1)
+  debug_img_callback('erode_img', img)
 
   # binarize.
-  img = cv2.adaptiveThreshold(img, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY, 11, 2)
-  debug_img_callback('binarize', img)
+  thresh_img = cv2.adaptiveThreshold(erode_img, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY, 11, 2)
+  debug_img_callback('thresh_img', thresh_img)
 
   # detect edges.
-  img = cv2.Canny(img, 30, 400)
-  # img = cv2.Canny(img, 100, 200, apertureSize=3)
-  debug_img_callback('edged', img)
-  return img
+  edge_img = cv2.Canny(thresh_img, 30, 400)
+  debug_img_callback('edge_img', edge_img)
+  return edge_img
 
 def _detect_id_card_contour(img, margin, orig_coordinates):
   contours, _ = cv2.findContours(img, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
@@ -117,12 +117,11 @@ def _detect_id_card_contour(img, margin, orig_coordinates):
     return approx
   return None
 
-def _perspective_correction(img, id_card_contour, ratio, debug_img_callback):
+def _perspective_correction(img, id_card_contour, ratio):
   # apply the four point tranform to obtain a "birds eye view" of the image.
-  img = utils.four_point_transform(id_card_contour / ratio, img)
-  img, _ = utils.resize_img(img, height = 800)
-  debug_img_callback('warped', img)
-  return img
+  warped_img = utils.four_point_transform(id_card_contour / ratio, img)
+  warped_img, _ = utils.resize_img(warped_img, height = 800)
+  return warped_img
 
 def _resize_to_id_card_ratio(img):
   width, height = img.shape[:2]
