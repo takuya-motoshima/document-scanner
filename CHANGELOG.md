@@ -1,6 +1,10 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [1.0.15] - 2022/11/2
+### Fixed
+- Added to debug log of memory usage (Add psutil==5.9.3 as a dependency).
+
 ## [1.0.14] - 2022/10/4
 ### Fixed
 - Update dependent google cloud vision.

@@ -1,5 +1,6 @@
 import os
 import sys
+import psutil
 import cv2
 import numpy as np
 from dotmap import DotMap
@@ -67,22 +68,27 @@ def _detect_edges(img, debug_img_callback):
   # grayscaling.
   gray_img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
   debug_img_callback('gray_img', gray_img)
+  _debug_memory()
 
   # remove noise.
   median_img = cv2.medianBlur(gray_img, ksize=5)
   debug_img_callback('median_img', median_img)
+  _debug_memory()
 
   # shrink the white areas and expand the black areas.
   erode_img = cv2.erode(median_img, kernel=np.ones((5,5), np.uint8), iterations=1)
   debug_img_callback('erode_img', img)
+  _debug_memory()
 
   # binarize.
   thresh_img = cv2.adaptiveThreshold(erode_img, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY, 11, 2)
   debug_img_callback('thresh_img', thresh_img)
+  _debug_memory()
 
   # detect edges.
   edge_img = cv2.Canny(thresh_img, 30, 400)
   debug_img_callback('edge_img', edge_img)
+  _debug_memory()
   return edge_img
 
 def _detect_id_card_contour(img, margin, orig_coordinates):
@@ -133,3 +139,7 @@ def _resize_to_id_card_ratio(img):
   else:
     new_width = round(height / (height_ratio / width_ratio))
   return cv2.resize(img, (new_width, new_height), cv2.INTER_AREA)
+
+def _debug_memory():
+  mem = psutil.virtual_memory()
+  utils.logging.debug(f'Memory: {mem.used}/{mem.free} ({mem.percent}% in use)')
